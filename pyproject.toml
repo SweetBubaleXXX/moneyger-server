@@ -1,5 +1,12 @@
 [tool.black]
-line-length = 91
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+(
+  ^/moneymanager/settings.py
+  | migrations
+)
+'''
 
 [tool.isort]
 profile = "black"
