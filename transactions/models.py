@@ -34,12 +34,16 @@ class TransactionCategory(models.Model):
         settings.AUTH_USER_MODEL, related_name="transactions", on_delete=models.CASCADE
     )
     parent_category = models.ForeignKey(
-        "self", related_name="child_categories", null=True, on_delete=models.CASCADE
+        "self",
+        related_name="child_categories",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
     )
     transaction_type = models.CharField(max_length=3, choices=TransactionType.choices)
     name = models.CharField(max_length=64)
     display_order = models.IntegerField(default=0)
-    icon = models.CharField(max_length=64, null=True)
+    icon = models.CharField(max_length=64, null=True, blank=True)
     color = ColorField(samples=COLOR_PALETTE)
     last_modified = models.DateTimeField(auto_now=True)
 
@@ -48,11 +52,12 @@ class Transaction(models.Model):
     category = models.ForeignKey(
         TransactionCategory,
         null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name="transactions",
     )
     amount = models.BigIntegerField()
     currency = models.CharField(max_length=3, choices=CurrencyChoices.choices)
-    comment = models.CharField(null=True, max_length=255)
+    comment = models.CharField(null=True, blank=True, max_length=255)
     transaction_time = models.DateTimeField(default=timezone.now)
     last_modified = models.DateTimeField(auto_now=True)
