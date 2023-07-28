@@ -1,5 +1,17 @@
 {
     "python.linting.pycodestyleEnabled": true,
     "python.linting.mypyEnabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "database",
+            "database": "postgres",
+            "username": "postgres",
+            "password": "testpass"
+        }
+    ]
 }

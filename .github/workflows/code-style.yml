@@ -21,3 +21,4 @@ jobs:
         run: |
           python -m pip install pycodestyle
           pycodestyle moneymanager/
+          pycodestyle transactions/

@@ -20,3 +20,4 @@ jobs:
       - name: Run mypy
         run: |
           mypy moneymanager
+          mypy transactions
