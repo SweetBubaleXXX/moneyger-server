@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from transactions.models import CurrencyChoices
+from core.constants import CurrencyChoices
 
 
 class Account(AbstractUser):

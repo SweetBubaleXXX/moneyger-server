@@ -2,22 +2,18 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+
+from ..constants import CurrencyChoices, TransactionType
 
 
-class CurrencyChoices(models.TextChoices):
-    USD = "USD"
-    EUR = "EUR"
-    BYN = "BYN"
-    RUB = "RUB"
+class BaseModel(models.Model):
+    last_modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
 
 
-class TransactionType(models.TextChoices):
-    INCOME = "IN", _("Income")
-    OUTCOME = "OUT", _("Outcome")
-
-
-class TransactionCategory(models.Model):
+class TransactionCategory(BaseModel):
     COLOR_PALETTE = [
         ("#ffffff", "white"),
         ("#ff6b22", "orange"),
@@ -45,10 +41,9 @@ class TransactionCategory(models.Model):
     display_order = models.IntegerField(default=0)
     icon = models.CharField(max_length=64, null=True, blank=True)
     color = ColorField(samples=COLOR_PALETTE)
-    last_modified = models.DateTimeField(auto_now=True)
 
 
-class Transaction(models.Model):
+class Transaction(BaseModel):
     category = models.ForeignKey(
         TransactionCategory,
         null=True,
@@ -60,4 +55,3 @@ class Transaction(models.Model):
     currency = models.CharField(max_length=3, choices=CurrencyChoices.choices)
     comment = models.CharField(null=True, blank=True, max_length=255)
     transaction_time = models.DateTimeField(default=timezone.now)
-    last_modified = models.DateTimeField(auto_now=True)

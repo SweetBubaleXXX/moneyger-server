@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "colorfield",
     "accounts",
-    "transactions",
+    "core",
 ]
 
 MIDDLEWARE = [
