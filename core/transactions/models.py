@@ -2,12 +2,13 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 from ..constants import CurrencyChoices, TransactionType
 
 
 class BaseModel(models.Model):
-    last_modified = models.DateTimeField(auto_now=True)
+    history = HistoricalRecords(inherit=True)
 
     class Meta:
         abstract = True
