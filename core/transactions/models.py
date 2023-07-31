@@ -8,6 +8,10 @@ from ..constants import CurrencyChoices, TransactionType
 
 
 class BaseModel(models.Model):
+    account = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
     history = HistoricalRecords(inherit=True)
 
     class Meta:
@@ -27,11 +31,6 @@ class TransactionCategory(BaseModel):
         ("#009688", "dark teal"),
     ]
 
-    account = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name="transaction_categories",
-        on_delete=models.CASCADE,
-    )
     parent_category = models.ForeignKey(
         "self",
         related_name="child_categories",
