@@ -42,7 +42,7 @@ class TransactionCategory(BaseModel):
     transaction_type = models.CharField(max_length=3, choices=TransactionType.choices)
     name = models.CharField(max_length=64)
     display_order = models.IntegerField(default=0)
-    icon = models.CharField(max_length=64, null=True, blank=True)
+    icon = models.CharField(max_length=64, blank=True)
     color = ColorField(samples=COLOR_PALETTE)
 
 
@@ -56,5 +56,5 @@ class Transaction(BaseModel):
     )
     amount = models.BigIntegerField()
     currency = models.CharField(max_length=3, choices=CurrencyChoices.choices)
-    comment = models.CharField(null=True, blank=True, max_length=255)
+    comment = models.CharField(max_length=255, blank=True)
     transaction_time = models.DateTimeField(default=timezone.now)
