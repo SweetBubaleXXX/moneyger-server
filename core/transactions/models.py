@@ -28,7 +28,9 @@ class TransactionCategory(BaseModel):
     ]
 
     account = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name="transactions", on_delete=models.CASCADE
+        settings.AUTH_USER_MODEL,
+        related_name="transaction_categories",
+        on_delete=models.CASCADE,
     )
     parent_category = models.ForeignKey(
         "self",
