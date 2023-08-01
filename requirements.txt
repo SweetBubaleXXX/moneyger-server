@@ -3,4 +3,5 @@ django-colorfield==0.9.0
 django-environ==0.10.0
 django-simple-history==3.3.0
 djangorestframework==3.14.0
+factory-boy==3.3.0
 psycopg2==2.9.6
