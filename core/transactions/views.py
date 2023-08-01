@@ -2,6 +2,8 @@ from functools import cache
 
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import TransactionCategory
 from .permissions import IsOwnAccount
@@ -16,32 +18,30 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
     permission_classes = (IsOwnAccount,)
     lookup_url_kwarg = "category_id"
 
+    def get_serializer_class(self):
+        if self.action in ("update", "partial_update", "add_child_category"):
+            return TransactionCategoryUpdateSerializer
+        return self.serializer_class
+
     def get_queryset(self):
         return self.request.user.transactioncategory_set.all()
 
     def perform_create(self, serializer):
         serializer.save(account=self.request.user)
 
-    def get_serializer_class(self):
-        if self.action in ("update", "partial_update"):
-            return TransactionCategoryUpdateSerializer
-        return self.serializer_class
-
-
-class ChildTransactionCategoryViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    serializer_class = TransactionCategoryUpdateSerializer
-    permission_classes = (IsOwnAccount,)
-
-    @cache
-    def get_object(self):
-        obj = get_object_or_404(TransactionCategory, pk=self.kwargs["category_id"])
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-    def perform_create(self, serializer):
+    @action(
+        detail=True,
+        methods=("post",),
+        url_path="add",
+        url_name="transaction-category-add-child",
+    )
+    def add_child_category(self, request, category_id=None):
         parent_category = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         serializer.save(
-            account=self.request.user,
+            account=request.user,
             parent_category=parent_category,
             transaction_type=parent_category.transaction_type,
         )
+        return Response(serializer.data)

@@ -23,6 +23,6 @@ class TransactionCategorySerializer(serializers.ModelSerializer):
 
 class TransactionCategoryUpdateSerializer(TransactionCategorySerializer):
     class Meta(TransactionCategorySerializer.Meta):
-        read_only_fields = TransactionCategorySerializer.Meta.fields + (
+        read_only_fields = TransactionCategorySerializer.Meta.read_only_fields + (
             "transaction_type",
         )
