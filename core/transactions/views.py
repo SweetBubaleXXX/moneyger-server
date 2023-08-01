@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
@@ -32,7 +32,7 @@ class ChildTransactionCategoryViewSet(mixins.CreateModelMixin, viewsets.GenericV
     serializer_class = TransactionCategoryUpdateSerializer
     permission_classes = (IsOwnAccount,)
 
-    @lru_cache(maxsize=1)
+    @cache
     def get_object(self):
         obj = get_object_or_404(TransactionCategory, pk=self.kwargs["category_id"])
         self.check_object_permissions(self.request, obj)
