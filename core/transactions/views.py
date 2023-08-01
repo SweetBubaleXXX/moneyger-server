@@ -19,7 +19,7 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
     lookup_url_kwarg = "category_id"
 
     def get_serializer_class(self):
-        if self.action in ("update", "partial_update", "add_child_category"):
+        if self.action in ("update", "partial_update", "add_subcategory"):
             return TransactionCategoryUpdateSerializer
         return self.serializer_class
 
@@ -32,15 +32,15 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
     @action(
         detail=True,
         methods=("get",),
-        url_name="children",
+        url_name="subcategories",
     )
-    def child_categories(self, request, category_id=None):
+    def subcategories(self, request, category_id=None):
         child_categories = self.get_object().child_categories
         serializer = self.get_serializer(child_categories, many=True)
         return Response(serializer.data)
 
-    @child_categories.mapping.post
-    def add_child_category(self, request, category_id=None):
+    @subcategories.mapping.post
+    def add_subcategory(self, request, category_id=None):
         parent_category = self.get_object()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
