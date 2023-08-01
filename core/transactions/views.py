@@ -31,10 +31,17 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=("post",),
-        url_path="add",
-        url_name="transaction-category-add-child",
+        methods=("get",),
+        url_name="children",
     )
+    def child_categories(self, request, category_id=None):
+        child_categories = TransactionCategory.objects.filter(
+            parent_category=self.get_object()
+        )
+        serializer = self.get_serializer(child_categories, many=True)
+        return Response(serializer.data)
+
+    @child_categories.mapping.post
     def add_child_category(self, request, category_id=None):
         parent_category = self.get_object()
         serializer = self.get_serializer(data=request.data)
