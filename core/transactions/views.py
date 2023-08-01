@@ -35,9 +35,7 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         url_name="children",
     )
     def child_categories(self, request, category_id=None):
-        child_categories = TransactionCategory.objects.filter(
-            parent_category=self.get_object()
-        )
+        child_categories = self.get_object().child_categories
         serializer = self.get_serializer(child_categories, many=True)
         return Response(serializer.data)
 
