@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from ..constants import TransactionType
+from .models import TransactionCategory
 from .factories import (
     DEFAULT_ACCOUNT_PASSWORD,
     AccountFactory,
@@ -101,6 +102,53 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.json()["transaction_type"], TransactionType.INCOME)
+
+    def test_updated_category(self):
+        """Category must have provided fields changed."""
+        category = TransactionCategoryFactory(
+            account=self.account,
+            parent_category=None,
+        )
+        request_body = {
+            "name": "New name",
+            "display_order": 10,
+            "icon": "new_icon",
+            "color": "#123456",
+        }
+        response = self.client.put(
+            reverse("transaction-category-detail", args=(category.id,)), request_body
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLessEqual(request_body.items(), response.json().items())
+
+    def test_delete_category(self):
+        """Category must be successfully deleted."""
+        category = TransactionCategoryFactory(
+            account=self.account,
+            parent_category=None,
+        )
+        response = self.client.delete(
+            reverse("transaction-category-detail", args=(category.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(TransactionCategory.DoesNotExist):
+            TransactionCategory.objects.get(pk=category.id)
+
+    def test_delete_category_with_subcategories(self):
+        """All subcategories must be deleted too."""
+        parent_category = TransactionCategoryFactory(
+            account=self.account, parent_category=None
+        )
+        subcategories = TransactionCategoryFactory.create_batch(
+            10, account=self.account, parent_category=parent_category
+        )
+        response = self.client.delete(
+            reverse("transaction-category-detail", args=(parent_category.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        for category in subcategories:
+            with self.assertRaises(TransactionCategory.DoesNotExist):
+                TransactionCategory.objects.get(pk=category.id)
 
 
 class TransactionSubcategoryViewTests(AuthorizedTestCase):
