@@ -1,0 +1,37 @@
+name: Tests
+
+on:
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+        postgres:
+          image: postgres:10
+          env:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: testpass
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+          ports:
+            - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install -r requirements.txt -r requirements-dev.txt
+    - name: Run tests
+      env:
+        SECRET_KEY: test-secret-3v14zj8jYMjZ6UwfIgT5Kd6/GA24obSBPw
+        ALLOWED_HOSTS: "*"
+        DATABASE_URL: postgres://postgres:testpass@127.0.0.1:5432/postgres
+      run: pytest
