@@ -4,11 +4,8 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from ..constants import TransactionType
-from .factories import (
-    DEFAULT_ACCOUNT_PASSWORD,
-    AccountFactory,
-    TransactionCategoryFactory,
-)
+from .factories import AccountFactory, TransactionCategoryFactory
+
 from .models import TransactionCategory
 
 
@@ -16,9 +13,7 @@ class AuthorizedTestCase(TestCase):
     def setUp(self):
         self.account = AccountFactory()
         self.client = APIClient()
-        self.client.login(
-            username=self.account.username, password=DEFAULT_ACCOUNT_PASSWORD
-        )
+        self.client.force_login(self.account)
 
 
 class TransactionCategoryViewTests(AuthorizedTestCase):
@@ -33,7 +28,7 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
         response = self.client.get(reverse("transaction-category-list"))
         self.assertListEqual(response.json(), [])
 
-    def test_subcategories_list_amount(self):
+    def test_categories_list_amount(self):
         """Response list must contain correct amount of items."""
         categories = TransactionCategoryFactory.create_batch(
             5, account=self.account, parent_category=None
@@ -42,6 +37,21 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
         response_list = response.json()
         self.assertIsInstance(response_list, list)
         self.assertEqual(len(response_list), len(categories))
+
+    def test_categories_list_filter_not_subcategory(self):
+        """Response list must contain only categories without parent category."""
+        parent_categories = TransactionCategoryFactory.create_batch(
+            5, account=self.account, parent_category=None
+        )
+        for category in parent_categories:
+            TransactionCategoryFactory.create_batch(
+                3, account=self.account, parent_category=category
+            )
+        response = self.client.get(
+            "%s?parent_category=None" % reverse("transaction-category-list")
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), len(parent_categories))
 
     def test_category_not_found(self):
         """Response 404 if category doesn't exist."""
