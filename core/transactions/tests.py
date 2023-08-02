@@ -11,7 +11,7 @@ from .factories import (
 )
 
 
-class TransactionCategoryViewTests(TestCase):
+class AuthorizedTestCase(TestCase):
     def setUp(self):
         self.account = AccountFactory()
         self.client = APIClient()
@@ -19,6 +19,8 @@ class TransactionCategoryViewTests(TestCase):
             username=self.account.username, password=DEFAULT_ACCOUNT_PASSWORD
         )
 
+
+class TransactionCategoryViewTests(AuthorizedTestCase):
     def test_unauthorized(self):
         """Try to get categories list without providing authorization credentials."""
         self.client.logout()
@@ -30,18 +32,20 @@ class TransactionCategoryViewTests(TestCase):
         response = self.client.get(reverse("transaction-category-list"))
         self.assertListEqual(response.json(), [])
 
-    def test_categories_list_amount(self):
+    def test_subcategories_list_amount(self):
         """Response list must contain correct amount of items."""
-        categories_amount = 5
-        TransactionCategoryFactory.create_batch(
-            categories_amount,
-            account=self.account,
-            parent_category=None,
+        categories = TransactionCategoryFactory.create_batch(
+            5, account=self.account, parent_category=None
         )
         response = self.client.get(reverse("transaction-category-list"))
         response_list = response.json()
         self.assertIsInstance(response_list, list)
-        self.assertEqual(len(response_list), categories_amount)
+        self.assertEqual(len(response_list), len(categories))
+
+    def test_category_not_found(self):
+        """Response 404 if category doesn't exist."""
+        response = self.client.post(reverse("transaction-category-list", args=(12345,)))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_add_category_required_fields(self):
         """
@@ -49,18 +53,16 @@ class TransactionCategoryViewTests(TestCase):
         """
         response = self.client.post(reverse("transaction-category-list"))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertListEqual(response.json().get("name"), ["This field is required."])
+        self.assertListEqual(response.json()["name"], ["This field is required."])
         self.assertListEqual(
-            response.json().get("transaction_type"), ["This field is required."]
+            response.json()["transaction_type"], ["This field is required."]
         )
 
     def test_add_category_blank_name(self):
         """Response an error when trying to create a category with blank name."""
         response = self.client.post(reverse("transaction-category-list"), {"name": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertListEqual(
-            response.json().get("name"), ["This field may not be blank."]
-        )
+        self.assertListEqual(response.json()["name"], ["This field may not be blank."])
 
     def test_add_category_null_parent(self):
         """Category must be created with parent_category set to null."""
@@ -70,13 +72,100 @@ class TransactionCategoryViewTests(TestCase):
         }
         response = self.client.post(reverse("transaction-category-list"), request_body)
         expected_response_subdict = request_body | {"parent_category": None}
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertLessEqual(
             expected_response_subdict.items(),
             response.json().items(),
         )
 
+    def test_add_category_ignore_parent(self):
+        """Parent category id in request must be ignored when adding new."""
+        request_body = {
+            "parent_category": 12345,
+            "transaction_type": TransactionType.OUTCOME,
+            "name": "Category",
+        }
+        response = self.client.post(reverse("transaction-category-list"), request_body)
+        self.assertEqual(response.json()["parent_category"], None)
+
+    def test_cannot_edit_transaction_type(self):
+        """Forbid changing transaction type of existing category."""
+        category = TransactionCategoryFactory(
+            account=self.account,
+            parent_category=None,
+            transaction_type=TransactionType.OUTCOME,
+        )
+        response = self.client.patch(
+            reverse("transaction-category-detail", args=(category.id,)),
+            {"transaction_type": TransactionType.INCOME},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.json()["transaction_type"], TransactionType.INCOME)
+
+
+class TransactionSubcategoryViewTests(AuthorizedTestCase):
+    def test_no_subcategories(self):
+        """Response must be an empty list if there are on subcategories."""
+        parent_category = TransactionCategoryFactory(
+            account=self.account, parent_category=None
+        )
+        response = self.client.get(
+            reverse("transaction-category-subcategories", args=(parent_category.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(response.json(), [])
+
+    def test_list_subcategories_of_other_account(self):
+        """Response 404 when trying to get subcategories of other account."""
+        other_account_category = TransactionCategoryFactory(
+            account=AccountFactory(),
+            parent_category=None,
+        )
+        response = self.client.get(
+            reverse(
+                "transaction-category-subcategories", args=(other_account_category.id,)
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_subcategories_list_amount(self):
+        """Response list must contain correct amount of items."""
+        parent_category = TransactionCategoryFactory(
+            account=self.account, parent_category=None
+        )
+        categories = TransactionCategoryFactory.create_batch(
+            10, account=self.account, parent_category=parent_category
+        )
+        response = self.client.get(
+            reverse("transaction-category-subcategories", args=(parent_category.id,))
+        )
+        response_list = response.json()
+        self.assertIsInstance(response_list, list)
+        self.assertEqual(len(response_list), len(categories))
+
+    def test_add_subcategory_to_other_account(self):
+        """Response 404 when trying to add subcategory to other account."""
+        other_account_category = TransactionCategoryFactory(
+            account=AccountFactory(),
+            parent_category=None,
+        )
+        response = self.client.post(
+            reverse(
+                "transaction-category-subcategories", args=(other_account_category.id,)
+            ),
+            {"name": "Subcategory"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_subcategory_nonexistent_parent(self):
+        """Response 404 if trying to add subcategory to category that doesn't exist"""
+        response = self.client.post(
+            reverse("transaction-category-subcategories", args=(12345,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_add_subcategory(self):
-        """Subcategory should be created and have the same transaction_type."""
+        """Subcategory must be created and have the same transaction_type."""
         parent_category = TransactionCategoryFactory(
             account=self.account,
             parent_category=None,
