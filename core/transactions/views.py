@@ -1,11 +1,9 @@
-from functools import cache
-
-from django.shortcuts import get_object_or_404
-from rest_framework import mixins, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import TransactionCategory
+from .filters import TransactionCategoryFilter
 from .permissions import IsOwnAccount
 from .serializers import (
     TransactionCategorySerializer,
@@ -16,6 +14,8 @@ from .serializers import (
 class TransactionCategoryViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionCategorySerializer
     permission_classes = (IsOwnAccount,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TransactionCategoryFilter
     lookup_url_kwarg = "category_id"
 
     def get_serializer_class(self):

@@ -5,7 +5,6 @@ from rest_framework.test import APIClient
 
 from ..constants import TransactionType
 from .factories import AccountFactory, TransactionCategoryFactory
-
 from .models import TransactionCategory
 
 
@@ -37,21 +36,6 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
         response_list = response.json()
         self.assertIsInstance(response_list, list)
         self.assertEqual(len(response_list), len(categories))
-
-    def test_categories_list_filter_not_subcategory(self):
-        """Response list must contain only categories without parent category."""
-        parent_categories = TransactionCategoryFactory.create_batch(
-            5, account=self.account, parent_category=None
-        )
-        for category in parent_categories:
-            TransactionCategoryFactory.create_batch(
-                3, account=self.account, parent_category=category
-            )
-        response = self.client.get(
-            "%s?parent_category=None" % reverse("transaction-category-list")
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), len(parent_categories))
 
     def test_category_not_found(self):
         """Response 404 if category doesn't exist."""
@@ -159,6 +143,23 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
         for category in subcategories:
             with self.assertRaises(TransactionCategory.DoesNotExist):
                 TransactionCategory.objects.get(pk=category.id)
+
+
+class TransactionCategoryFilterTests(AuthorizedTestCase):
+    def test_categories_list_filter_not_subcategory(self):
+        """Response list must contain only categories without parent category."""
+        parent_categories = TransactionCategoryFactory.create_batch(
+            5, account=self.account, parent_category=None
+        )
+        for category in parent_categories:
+            TransactionCategoryFactory.create_batch(
+                3, account=self.account, parent_category=category
+            )
+        response = self.client.get(
+            "%s?not_subcategory=True" % reverse("transaction-category-list")
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), len(parent_categories))
 
 
 class TransactionSubcategoryViewTests(AuthorizedTestCase):
