@@ -4,12 +4,12 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from ..constants import TransactionType
-from .models import TransactionCategory
 from .factories import (
     DEFAULT_ACCOUNT_PASSWORD,
     AccountFactory,
     TransactionCategoryFactory,
 )
+from .models import TransactionCategory
 
 
 class AuthorizedTestCase(TestCase):
