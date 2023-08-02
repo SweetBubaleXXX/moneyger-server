@@ -11,3 +11,7 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 extend_skip_glob = ["*/migrations/*", "*/settings.py"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "moneymanager.settings"
+python_files = ["tests.py"]
