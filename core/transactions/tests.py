@@ -26,12 +26,12 @@ class TransactionCategoryViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_no_categories(self):
-        """Response should be an empty list if there are on categories."""
+        """Response must be an empty list if there are on categories."""
         response = self.client.get(reverse("transaction-category-list"))
         self.assertListEqual(response.json(), [])
 
     def test_categories_list_amount(self):
-        """Response list should contain correct amount of items."""
+        """Response list must contain correct amount of items."""
         categories_amount = 5
         TransactionCategoryFactory.create_batch(
             categories_amount,
@@ -43,22 +43,55 @@ class TransactionCategoryViewTests(TestCase):
         self.assertIsInstance(response_list, list)
         self.assertEqual(len(response_list), categories_amount)
 
+    def test_add_category_required_fields(self):
+        """
+        Response an error when trying to create a category without necessary fields.
+        """
+        response = self.client.post(reverse("transaction-category-list"))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertListEqual(response.json().get("name"), ["This field is required."])
+        self.assertListEqual(
+            response.json().get("transaction_type"), ["This field is required."]
+        )
+
+    def test_add_category_blank_name(self):
+        """Response an error when trying to create a category with blank name."""
+        response = self.client.post(reverse("transaction-category-list"), {"name": ""})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertListEqual(
+            response.json().get("name"), ["This field may not be blank."]
+        )
+
+    def test_add_category_null_parent(self):
+        """Category must be created with parent_category set to null."""
+        request_body = {
+            "transaction_type": TransactionType.OUTCOME,
+            "name": "Category",
+        }
+        response = self.client.post(reverse("transaction-category-list"), request_body)
+        expected_response_subdict = request_body | {"parent_category": None}
+        self.assertLessEqual(
+            expected_response_subdict.items(),
+            response.json().items(),
+        )
+
     def test_add_subcategory(self):
         """Subcategory should be created and have the same transaction_type."""
         parent_category = TransactionCategoryFactory(
             account=self.account,
             parent_category=None,
-            transaction_type=TransactionType.INCOME[0],
+            transaction_type=TransactionType.INCOME,
         )
+        request_body = {"name": "Subcategory"}
         response = self.client.post(
             reverse("transaction-category-subcategories", args=(parent_category.id,)),
-            {"name": "Subcategory"},
+            request_body,
         )
-        self.assertDictContainsSubset(
-            {
-                "parent_category": parent_category.id,
-                "transaction_type": parent_category.transaction_type,
-                "name": "Subcategory",
-            },
-            response.json(),
+        expected_response_subdict = request_body | {
+            "parent_category": parent_category.id,
+            "transaction_type": parent_category.transaction_type,
+        }
+        self.assertLessEqual(
+            expected_response_subdict.items(),
+            response.json().items(),
         )
