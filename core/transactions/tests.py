@@ -3,12 +3,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from ..constants import TransactionType
 from .factories import (
     DEFAULT_ACCOUNT_PASSWORD,
     AccountFactory,
     TransactionCategoryFactory,
 )
-from ..constants import TransactionType
 
 
 class TransactionCategoryViewTests(TestCase):
