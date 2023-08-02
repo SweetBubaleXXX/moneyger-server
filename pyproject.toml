@@ -1,6 +1,13 @@
 [tool.black]
-line-length = 91
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+(
+  migrations/
+  | settings.py
+)
+'''
 
 [tool.isort]
 profile = "black"
-
+extend_skip_glob = ["*/migrations/*", "*/settings.py"]

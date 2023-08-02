@@ -20,5 +20,4 @@ jobs:
       - name: Lint with pycodestyle
         run: |
           python -m pip install pycodestyle
-          pycodestyle moneymanager/
-          pycodestyle transactions/
+          pycodestyle
