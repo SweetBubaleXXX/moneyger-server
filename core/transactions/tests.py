@@ -96,6 +96,16 @@ class TransactionCategoryViewTests(BaseTestCase):
         response = self.client.post(reverse("transaction-category-list"), request_body)
         self.assertEqual(response.json()["parent_category"], None)
 
+    def test_view_category_of_other_account(self):
+        """Response 404 when trying to get category that belongs to another account."""
+        other_account_category = self.get_or_create_category(account=AccountFactory())
+        response = self.client.get(
+            reverse(
+                "transaction-category-detail", args=(other_account_category.id,)
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_cannot_edit_transaction_type(self):
         """Forbid changing transaction type of existing category."""
         category = self.get_or_create_category(transaction_type=TransactionType.OUTCOME)
