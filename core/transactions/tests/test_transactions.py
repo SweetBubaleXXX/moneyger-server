@@ -137,6 +137,18 @@ class CategorizedTransactionViewTests(BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_add_transaction_zero_amount(self):
+        """Response an error when trying to add a transaction with zero amount."""
+        category = self.create_category()
+        response = self.client.post(
+            reverse("transaction-category-transactions", args=(category.id,)),
+            {
+                "amount": 0,
+                "currency": CurrencyChoices.USD,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_transaction_nonexistent_category(self):
         """Response 404 if trying to add transaction to category that doesn't exist."""
         response = self.client.post(
