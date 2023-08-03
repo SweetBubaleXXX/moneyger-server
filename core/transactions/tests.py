@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from ..constants import TransactionType
-from .factories import AccountFactory, TransactionCategoryFactory
+from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
 from .models import TransactionCategory
 
 
@@ -19,6 +19,14 @@ class BaseTestCase(TestCase):
             account=account or self.account, parent_category=parent_category, **kwargs
         )
 
+    def get_or_create_transaction(self, account=None, category=None, **kwargs):
+        account = account or self.account
+        return TransactionFactory(
+            account=account,
+            category=category or self.get_or_create_category(account=account),
+            **kwargs
+        )
+
     def create_categories_batch(
         self, size, account=None, parent_category=None, **kwargs
     ):
@@ -26,6 +34,15 @@ class BaseTestCase(TestCase):
             size,
             account=account or self.account,
             parent_category=parent_category,
+            **kwargs
+        )
+
+    def create_transactions_batch(self, size, account=None, category=None, **kwargs):
+        account = account or self.account
+        return TransactionFactory.create_batch(
+            size,
+            account=account,
+            category=category or self.get_or_create_category(account=account),
             **kwargs
         )
 
@@ -250,3 +267,39 @@ class TransactionSubcategoryViewTests(BaseTestCase):
             expected_response_subdict.items(),
             response.json().items(),
         )
+
+
+class TransactionListViewTests(BaseTestCase):
+    def test_unauthorized(self):
+        """Try to get transactions list without providing authorization credentials."""
+        self.client.logout()
+        response = self.client.get(reverse("transaction-list"))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_cannot_add_transaction(self):
+        """Forbid creating transactions using this route."""
+        category = self.get_or_create_category()
+        response = self.client.post(
+            reverse("transaction-list"),
+            {
+                "category": category.id,
+                "amount": 300,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_no_transactions(self):
+        """Response must be an empty list if there are on transactions."""
+        response = self.client.get(reverse("transaction-list"))
+        self.assertListEqual(response.json(), [])
+
+    def test_transactions_list_amount(self):
+        """Response list must contain correct amount of items."""
+        self.create_transactions_batch(
+            10, AccountFactory()
+        )
+        own_transactions = self.create_transactions_batch(20)
+        response = self.client.get(reverse("transaction-list"))
+        response_list = response.json()
+        self.assertIsInstance(response_list, list)
+        self.assertEqual(len(response_list), len(own_transactions))
