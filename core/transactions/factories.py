@@ -1,7 +1,7 @@
 import factory
 
-from ..constants import TransactionType
-from .models import TransactionCategory
+from ..constants import CurrencyChoices, TransactionType
+from .models import Transaction, TransactionCategory
 
 DEFAULT_ACCOUNT_PASSWORD = "default_password"
 
@@ -26,3 +26,14 @@ class TransactionCategoryFactory(factory.django.DjangoModelFactory):
     )
     name = factory.sequence(lambda n: "Category %d" % n)
     color = factory.Faker("color")
+
+
+class TransactionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Transaction
+
+    category = factory.SubFactory(TransactionCategoryFactory)
+    amount = factory.Faker("pyint")
+    currency = factory.Iterator(CurrencyChoices)
+    comment = factory.Faker("text", max_nd_chars=30)
+    transaction_time = factory.Faker("date_time")
