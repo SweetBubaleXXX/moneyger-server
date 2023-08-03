@@ -10,16 +10,16 @@ class BaseTestCase(TestCase):
         self.client = APIClient()
         self.client.force_login(self.account)
 
-    def get_or_create_category(self, account=None, parent_category=None, **kwargs):
+    def create_category(self, account=None, parent_category=None, **kwargs):
         return TransactionCategoryFactory(
             account=account or self.account, parent_category=parent_category, **kwargs
         )
 
-    def get_or_create_transaction(self, account=None, category=None, **kwargs):
+    def create_transaction(self, account=None, category=None, **kwargs):
         account = account or self.account
         return TransactionFactory(
             account=account,
-            category=category or self.get_or_create_category(account=account),
+            category=category or self.create_category(account=account),
             **kwargs
         )
 
@@ -35,9 +35,7 @@ class BaseTestCase(TestCase):
 
     def create_transactions_batch(self, size, account=None, category=None, **kwargs):
         account = account or self.account
+        category = category or self.create_category(account=account)
         return TransactionFactory.create_batch(
-            size,
-            account=account,
-            category=category or self.get_or_create_category(account=account),
-            **kwargs
+            size, account=account, category=category, **kwargs
         )

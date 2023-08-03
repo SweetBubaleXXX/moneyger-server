@@ -90,7 +90,7 @@ class TransactionCategoryViewTests(BaseTestCase):
 
     def test_view_category_of_other_account(self):
         """Response 404 when trying to get category that belongs to another account."""
-        other_account_category = self.get_or_create_category(account=AccountFactory())
+        other_account_category = self.create_category(account=AccountFactory())
         response = self.client.get(
             reverse("transaction-category-detail", args=(other_account_category.id,))
         )
@@ -98,7 +98,7 @@ class TransactionCategoryViewTests(BaseTestCase):
 
     def test_cannot_edit_transaction_type(self):
         """Forbid changing transaction type of existing category."""
-        category = self.get_or_create_category(transaction_type=TransactionType.OUTCOME)
+        category = self.create_category(transaction_type=TransactionType.OUTCOME)
         response = self.client.patch(
             reverse("transaction-category-detail", args=(category.id,)),
             {"transaction_type": TransactionType.INCOME},
@@ -108,7 +108,7 @@ class TransactionCategoryViewTests(BaseTestCase):
 
     def test_updated_category(self):
         """Category must have provided fields changed."""
-        category = self.get_or_create_category()
+        category = self.create_category()
         request_body = {
             "name": "New name",
             "display_order": 10,
@@ -123,7 +123,7 @@ class TransactionCategoryViewTests(BaseTestCase):
 
     def test_delete_category(self):
         """Category must be successfully deleted."""
-        category = self.get_or_create_category()
+        category = self.create_category()
         response = self.client.delete(
             reverse("transaction-category-detail", args=(category.id,))
         )
@@ -133,7 +133,7 @@ class TransactionCategoryViewTests(BaseTestCase):
 
     def test_delete_category_with_subcategories(self):
         """All subcategories must be deleted too."""
-        parent_category = self.get_or_create_category()
+        parent_category = self.create_category()
         subcategories = self.create_categories_batch(
             10, parent_category=parent_category
         )

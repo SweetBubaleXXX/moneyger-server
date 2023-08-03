@@ -9,7 +9,7 @@ from .factories import AccountFactory
 class TransactionSubcategoryViewTests(BaseTestCase):
     def test_no_subcategories(self):
         """Response must be an empty list if there are on subcategories."""
-        parent_category = self.get_or_create_category()
+        parent_category = self.create_category()
         response = self.client.get(
             reverse("transaction-category-subcategories", args=(parent_category.id,))
         )
@@ -18,7 +18,7 @@ class TransactionSubcategoryViewTests(BaseTestCase):
 
     def test_list_subcategories_of_other_account(self):
         """Response 404 when trying to get subcategories of other account."""
-        other_account_category = self.get_or_create_category(account=AccountFactory())
+        other_account_category = self.create_category(account=AccountFactory())
         response = self.client.get(
             reverse(
                 "transaction-category-subcategories", args=(other_account_category.id,)
@@ -28,7 +28,7 @@ class TransactionSubcategoryViewTests(BaseTestCase):
 
     def test_subcategories_list_amount(self):
         """Response list must contain correct amount of items."""
-        parent_category = self.get_or_create_category()
+        parent_category = self.create_category()
         categories = self.create_categories_batch(10, parent_category=parent_category)
         response = self.client.get(
             reverse("transaction-category-subcategories", args=(parent_category.id,))
@@ -39,7 +39,7 @@ class TransactionSubcategoryViewTests(BaseTestCase):
 
     def test_add_subcategory_to_other_account(self):
         """Response 404 when trying to add subcategory to other account."""
-        other_account_category = self.get_or_create_category(
+        other_account_category = self.create_category(
             account=AccountFactory(),
         )
         response = self.client.post(
@@ -59,7 +59,7 @@ class TransactionSubcategoryViewTests(BaseTestCase):
 
     def test_add_subcategory(self):
         """Subcategory must be created and have the same transaction_type."""
-        parent_category = self.get_or_create_category(
+        parent_category = self.create_category(
             transaction_type=TransactionType.INCOME,
         )
         request_body = {"name": "Subcategory"}

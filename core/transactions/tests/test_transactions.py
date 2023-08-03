@@ -14,7 +14,7 @@ class TransactionListViewTests(BaseTestCase):
 
     def test_cannot_add_transaction(self):
         """Forbid creating transactions using this route."""
-        category = self.get_or_create_category()
+        category = self.create_category()
         response = self.client.post(
             reverse("transaction-list"),
             {
