@@ -19,7 +19,7 @@ class TransactionCategoryFactory(factory.django.DjangoModelFactory):
         model = TransactionCategory
 
     account = factory.SubFactory(AccountFactory)
-    transaction_type = TransactionType.OUTCOME[0]
+    transaction_type = factory.Iterator(TransactionType)
     parent_category = factory.SubFactory(
         "core.transactions.factories.TransactionCategoryFactory",
         transaction_type=factory.SelfAttribute("..transaction_type"),
