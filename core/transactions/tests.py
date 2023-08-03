@@ -50,11 +50,6 @@ class TransactionCategoryViewTests(BaseTestCase):
         self.assertIsInstance(response_list, list)
         self.assertEqual(len(response_list), len(categories))
 
-    def test_category_not_found(self):
-        """Response 404 if category doesn't exist."""
-        response = self.client.post(reverse("transaction-category-list", args=(12345,)))
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
     def test_add_category_unauthorized(self):
         """Try to create category without providing authorization credentials."""
         self.client.logout()
@@ -107,6 +102,13 @@ class TransactionCategoryViewTests(BaseTestCase):
         }
         response = self.client.post(reverse("transaction-category-list"), request_body)
         self.assertEqual(response.json()["parent_category"], None)
+
+    def test_category_not_found(self):
+        """Response 404 if category doesn't exist."""
+        response = self.client.get(
+            reverse("transaction-category-detail", args=(12345,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_view_category_of_other_account(self):
         """Response 404 when trying to get category that belongs to another account."""
