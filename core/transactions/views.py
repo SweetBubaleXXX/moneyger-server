@@ -52,6 +52,27 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
+    @action(
+        serializer_class=TransactionSerializer,
+        detail=True,
+        methods=("get",),
+        url_name="transactions",
+    )
+    def transactions(self, request, category_id=None):
+        transactions = self.get_object().transactions
+        serializer = self.get_serializer(transactions, many=True)
+        return Response(serializer.data)
+
+    @transactions.mapping.post
+    def add_transaction(self, request, category_id=None):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            account=request.user,
+            category=self.get_object(),
+        )
+        return Response(serializer.data)
+
 
 class TransactionViewMixin:
     serializer_class = TransactionSerializer
