@@ -31,7 +31,7 @@ class BaseTestCase(TestCase):
 
 
 class TransactionCategoryViewTests(BaseTestCase):
-    def test_unauthorized(self):
+    def test_add_category_unauthorized(self):
         """Try to get categories list without providing authorization credentials."""
         self.client.logout()
         response = self.client.get(reverse("transaction-category-list"))
@@ -54,6 +54,18 @@ class TransactionCategoryViewTests(BaseTestCase):
         """Response 404 if category doesn't exist."""
         response = self.client.post(reverse("transaction-category-list", args=(12345,)))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_category_unauthorized(self):
+        """Try to create category without providing authorization credentials."""
+        self.client.logout()
+        response = self.client.post(
+            reverse("transaction-category-list"),
+            {
+                "transaction_type": TransactionType.OUTCOME,
+                "name": "Category",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_add_category_required_fields(self):
         """
@@ -100,9 +112,7 @@ class TransactionCategoryViewTests(BaseTestCase):
         """Response 404 when trying to get category that belongs to another account."""
         other_account_category = self.get_or_create_category(account=AccountFactory())
         response = self.client.get(
-            reverse(
-                "transaction-category-detail", args=(other_account_category.id,)
-            )
+            reverse("transaction-category-detail", args=(other_account_category.id,))
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
