@@ -1,6 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
 
+from ...constants import CurrencyChoices
+from ..models import Transaction
 from .base import BaseTestCase
 from .factories import AccountFactory
 
@@ -37,3 +39,63 @@ class TransactionListViewTests(BaseTestCase):
         response_list = response.json()
         self.assertIsInstance(response_list, list)
         self.assertEqual(len(response_list), len(own_transactions))
+
+
+class TransactionDetailsViewTests(BaseTestCase):
+    def test_transaction_not_found(self):
+        """Response 404 if transaction doesn't exist."""
+        response = self.client.get(reverse("transaction-detail", args=(12345,)))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_view_transaction_of_other_account(self):
+        """Response 404 when trying to get transaction that belongs to another account."""
+        other_account_transaction = self.create_transaction(account=AccountFactory())
+        response = self.client.get(
+            reverse("transaction-detail", args=(other_account_transaction.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_displays_correct_transaction_type(self):
+        """Transaction type in response must be the same in category."""
+        transaction = self.create_transaction()
+        response = self.client.get(
+            reverse("transaction-detail", args=(transaction.id,))
+        )
+        self.assertEqual(
+            response.json()["transaction_type"], transaction.category.transaction_type
+        )
+
+    def test_cannot_edit_category(self):
+        """Category id in request must be ignored when updating."""
+        transaction = self.create_transaction()
+        another_category = self.create_category()
+        response = self.client.patch(
+            reverse("transaction-detail", args=(transaction.id,)),
+            {"category": another_category.id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.json()["category"], another_category.id)
+
+    def test_updated_transaction(self):
+        """Transaction must have provided fields changed."""
+        transaction = self.create_transaction()
+        request_body = {
+            "amount": 555,
+            "currency": CurrencyChoices.EUR,
+            "comment": "New comment",
+        }
+        response = self.client.put(
+            reverse("transaction-detail", args=(transaction.id,)), request_body
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLessEqual(request_body.items(), response.json().items())
+
+    def test_delete_transaction(self):
+        """Transaction must be successfully deleted."""
+        transaction = self.create_transaction()
+        response = self.client.delete(
+            reverse("transaction-detail", args=(transaction.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(Transaction.DoesNotExist):
+            Transaction.objects.get(pk=transaction.id)
