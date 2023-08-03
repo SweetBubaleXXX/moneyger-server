@@ -48,7 +48,9 @@ class TransactionDetailsViewTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_view_transaction_of_other_account(self):
-        """Response 404 when trying to get transaction that belongs to another account."""
+        """
+        Response 404 when trying to get transaction that belongs to another account.
+        """
         other_account_transaction = self.create_transaction(account=AccountFactory())
         response = self.client.get(
             reverse("transaction-detail", args=(other_account_transaction.id,))
