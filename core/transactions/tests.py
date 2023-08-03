@@ -16,14 +16,17 @@ class BaseTestCase(TestCase):
 
     def get_or_create_category(self, account=None, parent_category=None, **kwargs):
         return TransactionCategoryFactory(
-            account=account or self.account, parent_category=parent_category
+            account=account or self.account, parent_category=parent_category, **kwargs
         )
 
     def create_categories_batch(
         self, size, account=None, parent_category=None, **kwargs
     ):
         return TransactionCategoryFactory.create_batch(
-            size, account=account or self.account, parent_category=parent_category
+            size,
+            account=account or self.account,
+            parent_category=parent_category,
+            **kwargs
         )
 
 
