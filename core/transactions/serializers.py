@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import TransactionCategory
+from .models import Transaction, TransactionCategory
 
 
 class TransactionCategorySerializer(serializers.ModelSerializer):
@@ -23,3 +23,20 @@ class TransactionCategoryUpdateSerializer(TransactionCategorySerializer):
         read_only_fields = TransactionCategorySerializer.Meta.read_only_fields + (
             "transaction_type",
         )
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    transaction_type = serializers.ReadOnlyField(source="category.transaction_type")
+
+    class Meta:
+        model = Transaction
+        fields = (
+            "id",
+            "category",
+            "transaction_type",
+            "amount",
+            "currency",
+            "comment",
+            "transaction_time",
+        )
+        read_only_fields = ("category",)
