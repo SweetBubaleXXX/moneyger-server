@@ -1,7 +1,7 @@
 import factory
 
-from ..constants import CurrencyChoices, TransactionType
-from .models import Transaction, TransactionCategory
+from ...constants import CurrencyChoices, TransactionType
+from ..models import Transaction, TransactionCategory
 
 DEFAULT_ACCOUNT_PASSWORD = "default_password"
 
