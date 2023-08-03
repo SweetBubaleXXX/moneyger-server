@@ -46,10 +46,8 @@ class TransactionCategoryViewTests(BaseTestCase):
         """
         response = self.client.post(reverse("transaction-category-list"))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertListEqual(response.json()["name"], ["This field is required."])
-        self.assertListEqual(
-            response.json()["transaction_type"], ["This field is required."]
-        )
+        for field in ("name", "transaction_type"):
+            self.assertListEqual(response.json()[field], ["This field is required."])
 
     def test_add_category_blank_name(self):
         """Response an error when trying to create a category with blank name."""

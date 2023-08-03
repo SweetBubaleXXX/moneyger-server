@@ -102,10 +102,49 @@ class TransactionDetailsViewTests(BaseTestCase):
 
 
 class CategorizedTransactionViewTests(BaseTestCase):
+    def test_transactions_list_amount(self):
+        """Response list must contain only transactions of current category."""
+        self.create_transactions_batch(10)
+        category = self.create_category()
+        transactions = self.create_transactions_batch(5, category=category)
+        response = self.client.get(
+            reverse("transaction-category-transactions", args=(category.id,))
+        )
+        response_list = response.json()
+        self.assertEqual(len(response_list), len(transactions))
+
+    def test_add_transaction_required_fields(self):
+        """
+        Response an error when trying to create a transaction without necessary fields.
+        """
+        category = self.create_category()
+        response = self.client.post(
+            reverse("transaction-category-transactions", args=(category.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        for field in ("amount", "currency"):
+            self.assertListEqual(response.json()[field], ["This field is required."])
+
+    def test_add_transaction_negative_amount(self):
+        """Response an error when trying to add a transaction with negative amount."""
+        category = self.create_category()
+        response = self.client.post(
+            reverse("transaction-category-transactions", args=(category.id,)),
+            {
+                "amount": -100,
+                "currency": CurrencyChoices.USD,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_transaction_nonexistent_category(self):
         """Response 404 if trying to add transaction to category that doesn't exist."""
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(12345,))
+            reverse("transaction-category-transactions", args=(12345,)),
+            {
+                "amount": 555,
+                "currency": CurrencyChoices.USD,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -117,7 +156,11 @@ class CategorizedTransactionViewTests(BaseTestCase):
         response = self.client.post(
             reverse(
                 "transaction-category-transactions", args=(other_account_category.id,)
-            )
+            ),
+            {
+                "amount": 555,
+                "currency": CurrencyChoices.USD,
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
