@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -8,6 +8,7 @@ from .permissions import IsOwnAccount
 from .serializers import (
     TransactionCategorySerializer,
     TransactionCategoryUpdateSerializer,
+    TransactionSerializer,
 )
 
 
@@ -50,3 +51,22 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
             transaction_type=parent_category.transaction_type,
         )
         return Response(serializer.data)
+
+
+class TransactionViewMixin:
+    serializer_class = TransactionSerializer
+    permission_classes = (IsOwnAccount,)
+
+    def get_queryset(self):
+        return self.request.user.transaction_set.all()
+
+
+class TransactionListView(TransactionViewMixin, generics.ListAPIView):
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ("category__transaction_type",)
+
+
+class TransactionDetailView(
+    TransactionViewMixin, generics.RetrieveUpdateDestroyAPIView
+):
+    pass

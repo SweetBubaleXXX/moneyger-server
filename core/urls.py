@@ -1,7 +1,5 @@
-from django.urls import include, path
-
-from .transactions.router import router as transaction_router
+from .transactions import urls as transaction_urls
 
 urlpatterns = [
-    path("", include(transaction_router.urls)),
+    *transaction_urls.urlpatterns,
 ]
