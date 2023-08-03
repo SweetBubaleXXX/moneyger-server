@@ -1,4 +1,5 @@
 import factory
+from django.utils import timezone
 
 from ...constants import CurrencyChoices, TransactionType
 from ..models import Transaction, TransactionCategory
@@ -36,4 +37,6 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     amount = factory.Faker("pyint")
     currency = factory.Iterator(CurrencyChoices)
     comment = factory.Faker("text", max_nb_chars=30)
-    transaction_time = factory.Faker("date_time")
+    transaction_time = factory.Faker(
+        "date_time", tzinfo=timezone.get_current_timezone()
+    )
