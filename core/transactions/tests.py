@@ -8,14 +8,26 @@ from .factories import AccountFactory, TransactionCategoryFactory
 from .models import TransactionCategory
 
 
-class AuthorizedTestCase(TestCase):
+class BaseTestCase(TestCase):
     def setUp(self):
         self.account = AccountFactory()
         self.client = APIClient()
         self.client.force_login(self.account)
 
+    def get_or_create_category(self, account=None, parent_category=None, **kwargs):
+        return TransactionCategoryFactory(
+            account=account or self.account, parent_category=parent_category
+        )
 
-class TransactionCategoryViewTests(AuthorizedTestCase):
+    def create_categories_batch(
+        self, size, account=None, parent_category=None, **kwargs
+    ):
+        return TransactionCategoryFactory.create_batch(
+            size, account=account or self.account, parent_category=parent_category
+        )
+
+
+class TransactionCategoryViewTests(BaseTestCase):
     def test_unauthorized(self):
         """Try to get categories list without providing authorization credentials."""
         self.client.logout()
@@ -29,9 +41,7 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
 
     def test_categories_list_amount(self):
         """Response list must contain correct amount of items."""
-        categories = TransactionCategoryFactory.create_batch(
-            5, account=self.account, parent_category=None
-        )
+        categories = self.create_categories_batch(5)
         response = self.client.get(reverse("transaction-category-list"))
         response_list = response.json()
         self.assertIsInstance(response_list, list)
@@ -85,11 +95,7 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
 
     def test_cannot_edit_transaction_type(self):
         """Forbid changing transaction type of existing category."""
-        category = TransactionCategoryFactory(
-            account=self.account,
-            parent_category=None,
-            transaction_type=TransactionType.OUTCOME,
-        )
+        category = self.get_or_create_category(transaction_type=TransactionType.OUTCOME)
         response = self.client.patch(
             reverse("transaction-category-detail", args=(category.id,)),
             {"transaction_type": TransactionType.INCOME},
@@ -99,10 +105,7 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
 
     def test_updated_category(self):
         """Category must have provided fields changed."""
-        category = TransactionCategoryFactory(
-            account=self.account,
-            parent_category=None,
-        )
+        category = self.get_or_create_category()
         request_body = {
             "name": "New name",
             "display_order": 10,
@@ -117,10 +120,7 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
 
     def test_delete_category(self):
         """Category must be successfully deleted."""
-        category = TransactionCategoryFactory(
-            account=self.account,
-            parent_category=None,
-        )
+        category = self.get_or_create_category()
         response = self.client.delete(
             reverse("transaction-category-detail", args=(category.id,))
         )
@@ -130,11 +130,9 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
 
     def test_delete_category_with_subcategories(self):
         """All subcategories must be deleted too."""
-        parent_category = TransactionCategoryFactory(
-            account=self.account, parent_category=None
-        )
-        subcategories = TransactionCategoryFactory.create_batch(
-            10, account=self.account, parent_category=parent_category
+        parent_category = self.get_or_create_category()
+        subcategories = self.create_categories_batch(
+            10, parent_category=parent_category
         )
         response = self.client.delete(
             reverse("transaction-category-detail", args=(parent_category.id,))
@@ -145,16 +143,12 @@ class TransactionCategoryViewTests(AuthorizedTestCase):
                 TransactionCategory.objects.get(pk=category.id)
 
 
-class TransactionCategoryFilterTests(AuthorizedTestCase):
+class TransactionCategoryFilterTests(BaseTestCase):
     def test_categories_list_filter_not_subcategory(self):
         """Response list must contain only categories without parent category."""
-        parent_categories = TransactionCategoryFactory.create_batch(
-            5, account=self.account, parent_category=None
-        )
+        parent_categories = self.create_categories_batch(5)
         for category in parent_categories:
-            TransactionCategoryFactory.create_batch(
-                3, account=self.account, parent_category=category
-            )
+            self.create_categories_batch(3, parent_category=category)
         response = self.client.get(
             "%s?not_subcategory=True" % reverse("transaction-category-list")
         )
@@ -162,12 +156,10 @@ class TransactionCategoryFilterTests(AuthorizedTestCase):
         self.assertEqual(len(response.json()), len(parent_categories))
 
 
-class TransactionSubcategoryViewTests(AuthorizedTestCase):
+class TransactionSubcategoryViewTests(BaseTestCase):
     def test_no_subcategories(self):
         """Response must be an empty list if there are on subcategories."""
-        parent_category = TransactionCategoryFactory(
-            account=self.account, parent_category=None
-        )
+        parent_category = self.get_or_create_category()
         response = self.client.get(
             reverse("transaction-category-subcategories", args=(parent_category.id,))
         )
@@ -176,10 +168,7 @@ class TransactionSubcategoryViewTests(AuthorizedTestCase):
 
     def test_list_subcategories_of_other_account(self):
         """Response 404 when trying to get subcategories of other account."""
-        other_account_category = TransactionCategoryFactory(
-            account=AccountFactory(),
-            parent_category=None,
-        )
+        other_account_category = self.get_or_create_category(account=AccountFactory())
         response = self.client.get(
             reverse(
                 "transaction-category-subcategories", args=(other_account_category.id,)
@@ -189,12 +178,8 @@ class TransactionSubcategoryViewTests(AuthorizedTestCase):
 
     def test_subcategories_list_amount(self):
         """Response list must contain correct amount of items."""
-        parent_category = TransactionCategoryFactory(
-            account=self.account, parent_category=None
-        )
-        categories = TransactionCategoryFactory.create_batch(
-            10, account=self.account, parent_category=parent_category
-        )
+        parent_category = self.get_or_create_category()
+        categories = self.create_categories_batch(10, parent_category=parent_category)
         response = self.client.get(
             reverse("transaction-category-subcategories", args=(parent_category.id,))
         )
@@ -204,9 +189,8 @@ class TransactionSubcategoryViewTests(AuthorizedTestCase):
 
     def test_add_subcategory_to_other_account(self):
         """Response 404 when trying to add subcategory to other account."""
-        other_account_category = TransactionCategoryFactory(
+        other_account_category = self.get_or_create_category(
             account=AccountFactory(),
-            parent_category=None,
         )
         response = self.client.post(
             reverse(
@@ -225,9 +209,7 @@ class TransactionSubcategoryViewTests(AuthorizedTestCase):
 
     def test_add_subcategory(self):
         """Subcategory must be created and have the same transaction_type."""
-        parent_category = TransactionCategoryFactory(
-            account=self.account,
-            parent_category=None,
+        parent_category = self.get_or_create_category(
             transaction_type=TransactionType.INCOME,
         )
         request_body = {"name": "Subcategory"}
