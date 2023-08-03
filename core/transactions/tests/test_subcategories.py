@@ -51,7 +51,7 @@ class TransactionSubcategoryViewTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_add_subcategory_nonexistent_parent(self):
-        """Response 404 if trying to add subcategory to category that doesn't exist"""
+        """Response 404 if trying to add subcategory to category that doesn't exist."""
         response = self.client.post(
             reverse("transaction-category-subcategories", args=(12345,))
         )
