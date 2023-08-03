@@ -35,8 +35,8 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         url_name="subcategories",
     )
     def subcategories(self, request, category_id=None):
-        child_categories = self.get_object().child_categories
-        serializer = self.get_serializer(child_categories, many=True)
+        subcategories = self.get_object().subcategories
+        serializer = self.get_serializer(subcategories, many=True)
         return Response(serializer.data)
 
     @subcategories.mapping.post

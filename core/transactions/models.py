@@ -33,7 +33,7 @@ class TransactionCategory(BaseModel):
 
     parent_category = models.ForeignKey(
         "self",
-        related_name="child_categories",
+        related_name="subcategories",
         null=True,
         blank=True,
         on_delete=models.CASCADE,
