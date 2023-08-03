@@ -3,7 +3,7 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .filters import TransactionCategoryFilter
+from .filters import TransactionCategoryFilter, TransactionFilter
 from .permissions import IsOwnAccount
 from .serializers import (
     TransactionCategorySerializer,
@@ -63,7 +63,7 @@ class TransactionViewMixin:
 
 class TransactionListView(TransactionViewMixin, generics.ListAPIView):
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ("category__transaction_type",)
+    filterset_class = TransactionFilter
 
 
 class TransactionDetailView(

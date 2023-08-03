@@ -1,7 +1,7 @@
-from django_filters import BooleanFilter
+from django_filters import BooleanFilter, DateTimeFromToRangeFilter, RangeFilter
 from django_filters import rest_framework as filters
 
-from .models import TransactionCategory
+from .models import Transaction, TransactionCategory
 
 
 class TransactionCategoryFilter(filters.FilterSet):
@@ -9,4 +9,16 @@ class TransactionCategoryFilter(filters.FilterSet):
 
     class Meta:
         model = TransactionCategory
-        fields = ["transaction_type", "icon", "color"]
+        fields = ("transaction_type", "icon", "color")
+
+
+class TransactionFilter(filters.FilterSet):
+    amount = RangeFilter("amount")
+    transaction_time = DateTimeFromToRangeFilter("transaction_time")
+
+    class Meta:
+        model = Transaction
+        fields = (
+            "category__transaction_type",
+            "currency",
+        )
