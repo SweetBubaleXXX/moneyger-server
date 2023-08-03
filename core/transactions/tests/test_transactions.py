@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 
-from ...constants import CurrencyChoices
+from ...constants import CurrencyChoices, TransactionType
 from ..models import Transaction
 from .base import BaseTestCase
 from .factories import AccountFactory
@@ -99,3 +99,47 @@ class TransactionDetailsViewTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         with self.assertRaises(Transaction.DoesNotExist):
             Transaction.objects.get(pk=transaction.id)
+
+
+class CategorizedTransactionViewTests(BaseTestCase):
+    def test_add_transaction_nonexistent_category(self):
+        """Response 404 if trying to add transaction to category that doesn't exist."""
+        response = self.client.post(
+            reverse("transaction-category-transactions", args=(12345,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_transaction_to_other_account(self):
+        """Response 404 when trying to add transaction to other account."""
+        other_account_category = self.create_category(
+            account=AccountFactory(),
+        )
+        response = self.client.post(
+            reverse(
+                "transaction-category-transactions", args=(other_account_category.id,)
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_transaction(self):
+        """Transaction must be created and have the correct transaction_type."""
+        category = self.create_category(
+            transaction_type=TransactionType.INCOME,
+        )
+        request_body = {
+            "amount": 555,
+            "currency": CurrencyChoices.EUR,
+            "comment": "Comment",
+        }
+        response = self.client.post(
+            reverse("transaction-category-transactions", args=(category.id,)),
+            request_body,
+        )
+        expected_response_subdict = request_body | {
+            "category": category.id,
+            "transaction_type": category.transaction_type,
+        }
+        self.assertLessEqual(
+            expected_response_subdict.items(),
+            response.json().items(),
+        )
