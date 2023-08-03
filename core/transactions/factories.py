@@ -35,5 +35,5 @@ class TransactionFactory(factory.django.DjangoModelFactory):
     category = factory.SubFactory(TransactionCategoryFactory)
     amount = factory.Faker("pyint")
     currency = factory.Iterator(CurrencyChoices)
-    comment = factory.Faker("text", max_nd_chars=30)
+    comment = factory.Faker("text", max_nb_chars=30)
     transaction_time = factory.Faker("date_time")
