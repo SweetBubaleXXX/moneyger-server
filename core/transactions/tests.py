@@ -61,11 +61,12 @@ class TransactionCategoryViewTests(BaseTestCase):
 
     def test_categories_list_amount(self):
         """Response list must contain correct amount of items."""
-        categories = self.create_categories_batch(5)
+        self.create_categories_batch(10, account=AccountFactory())
+        own_categories = self.create_categories_batch(5)
         response = self.client.get(reverse("transaction-category-list"))
         response_list = response.json()
         self.assertIsInstance(response_list, list)
-        self.assertEqual(len(response_list), len(categories))
+        self.assertEqual(len(response_list), len(own_categories))
 
     def test_add_category_unauthorized(self):
         """Try to create category without providing authorization credentials."""
