@@ -27,6 +27,9 @@ class TransactionCategoryUpdateSerializer(TransactionCategorySerializer):
 
 class TransactionSerializer(serializers.ModelSerializer):
     category = serializers.IntegerField(source="category_id", read_only=True)
+    amount = serializers.DecimalField(
+        source="amount_decimal", min_value=0, max_digits=15, decimal_places=None
+    )
     transaction_type = serializers.ReadOnlyField(source="category.transaction_type")
 
     class Meta:

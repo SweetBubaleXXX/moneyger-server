@@ -6,6 +6,7 @@ from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
 from ..constants import CurrencyChoices, TransactionType
+from ..services import currency
 
 
 class BaseModel(models.Model):
@@ -56,3 +57,11 @@ class Transaction(BaseModel):
     currency = models.CharField(max_length=3, choices=CurrencyChoices.choices)
     comment = models.CharField(max_length=255, blank=True)
     transaction_time = models.DateTimeField(default=timezone.now)
+
+    @property
+    def amount_decimal(self):
+        return currency.int_to_decimal(self.amount, self.currency)
+
+    @amount_decimal.setter
+    def amount_decimal(self, value):
+        self.amount = currency.decimal_to_int(value, self.currency)
