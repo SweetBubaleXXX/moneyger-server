@@ -151,7 +151,7 @@ class TransactionCategoryFilterTests(BaseTestCase):
         for category in parent_categories:
             self.create_categories_batch(3, parent_category=category)
         response = self.client.get(
-            "%s?not_subcategory=True" % reverse("transaction-category-list")
+            "{}?not_subcategory=True".format(reverse("transaction-category-list"))
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()), len(parent_categories))

@@ -54,6 +54,7 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
 
     @action(
         serializer_class=TransactionSerializer,
+        filterset_class=None,
         detail=True,
         methods=("get",),
         url_name="transactions",

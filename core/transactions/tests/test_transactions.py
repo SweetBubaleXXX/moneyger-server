@@ -200,3 +200,45 @@ class CategorizedTransactionViewTests(BaseTestCase):
             expected_response_subdict.items(),
             response.json().items(),
         )
+
+
+class TransactionFilterTests(BaseTestCase):
+    def test_transaction_type_filter(self):
+        """Response list must contain only transactions of provided type."""
+        self.create_transactions_batch(
+            10, category=self.create_category(transaction_type=TransactionType.OUTCOME)
+        )
+        income_transactions = self.create_transactions_batch(
+            5, category=self.create_category(transaction_type=TransactionType.INCOME)
+        )
+        response = self.client.get(
+            "{}?category__transaction_type=IN".format(reverse("transaction-list"))
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), len(income_transactions))
+
+    def test_other_account_category_filter(self):
+        """Forbid displaying transactions that belong to another account."""
+        other_account_category = self.create_category(account=AccountFactory())
+        response = self.client.get(
+            "{}?category={}".format(
+                reverse("transaction-list"), other_account_category.id
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertListEqual(
+            response.json()["category"],
+            ["Select a valid choice. That choice is not one of the available choices."],
+        )
+
+    def test_category_filter(self):
+        """Response list must contain only transactions of provided category."""
+        self.create_transactions_batch(5, category=self.create_category())
+        selected_category = self.create_category()
+        selected_category_transactions = self.create_transactions_batch(
+            10, category=selected_category
+        )
+        response = self.client.get(
+            "{}?category={}".format(reverse("transaction-list"), selected_category.id)
+        )
+        self.assertEqual(len(response.json()), len(selected_category_transactions))
