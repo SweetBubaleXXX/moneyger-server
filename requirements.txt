@@ -5,4 +5,5 @@ django-filter==23.2
 django-simple-history==3.3.0
 djangorestframework==3.14.0
 factory-boy==3.3.0
+iso4217==1.11.20220401
 psycopg2==2.9.6
