@@ -67,8 +67,31 @@ class TransactionDetailsViewTests(BaseTestCase):
             response.json()["transaction_type"], transaction.category.transaction_type
         )
 
-    def test_cannot_edit_category(self):
-        """Category id in request must be ignored when updating."""
+    def test_set_nonexistent_category(self):
+        """Response an error if trying to set a category that doesn't exist."""
+        transaction = self.create_transaction()
+        response = self.client.patch(
+            reverse("transaction-detail", args=(transaction.id,)),
+            {"category": 12345},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertListEqual(response.json()["category"], ["Invalid category id."])
+
+    def test_set_category_of_other_account(self):
+        """
+        Response an error if trying to set a category that belongs to another account.
+        """
+        transaction = self.create_transaction()
+        other_account_category = self.create_category(account=AccountFactory())
+        response = self.client.patch(
+            reverse("transaction-detail", args=(transaction.id,)),
+            {"category": other_account_category.id},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertListEqual(response.json()["category"], ["Invalid category id."])
+
+    def test_set_category_of_other_account(self):
+        """Transaction category must be successfully changed."""
         transaction = self.create_transaction()
         another_category = self.create_category()
         response = self.client.patch(
@@ -76,7 +99,7 @@ class TransactionDetailsViewTests(BaseTestCase):
             {"category": another_category.id},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertNotEqual(response.json()["category"], another_category.id)
+        self.assertEqual(response.json()["category"], another_category.id)
 
     def test_updated_transaction(self):
         """Transaction must have provided fields changed."""

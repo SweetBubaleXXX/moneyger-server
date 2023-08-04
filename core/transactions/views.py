@@ -9,6 +9,7 @@ from .serializers import (
     TransactionCategorySerializer,
     TransactionCategoryUpdateSerializer,
     TransactionSerializer,
+    TransactionUpdateSerializer,
 )
 
 
@@ -91,4 +92,4 @@ class TransactionListView(TransactionViewMixin, generics.ListAPIView):
 class TransactionDetailView(
     TransactionViewMixin, generics.RetrieveUpdateDestroyAPIView
 ):
-    pass
+    serializer_class = TransactionUpdateSerializer
