@@ -37,7 +37,11 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         url_name="subcategories",
     )
     def subcategories(self, request, category_id=None):
-        subcategories = self.get_object().subcategories
+        subcategories = self.get_object().subcategories.all()
+        page = self.paginate_queryset(subcategories)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(subcategories, many=True)
         return Response(serializer.data)
 
@@ -61,7 +65,11 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         url_name="transactions",
     )
     def transactions(self, request, category_id=None):
-        transactions = self.get_object().transactions
+        transactions = self.get_object().transactions.all()
+        page = self.paginate_queryset(transactions)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(transactions, many=True)
         return Response(serializer.data)
 

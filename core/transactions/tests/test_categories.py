@@ -15,18 +15,16 @@ class TransactionCategoryViewTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_no_categories(self):
-        """Response must be an empty list if there are on categories."""
+        """Response must be empty if there are on categories."""
         response = self.client.get(reverse("transaction-category-list"))
-        self.assertListEqual(response.json(), [])
+        self.assertEqual(response.json()["count"], 0)
 
-    def test_categories_list_amount(self):
-        """Response list must contain correct amount of items."""
+    def test_list_categories(self):
+        """Response must contain correct amount of items."""
         self.create_categories_batch(10, account=AccountFactory())
         own_categories = self.create_categories_batch(5)
         response = self.client.get(reverse("transaction-category-list"))
-        response_list = response.json()
-        self.assertIsInstance(response_list, list)
-        self.assertEqual(len(response_list), len(own_categories))
+        self.assertEqual(response.json()["count"], len(own_categories))
 
     def test_add_category_unauthorized(self):
         """Try to create category without providing authorization credentials."""
@@ -154,4 +152,4 @@ class TransactionCategoryFilterTests(BaseTestCase):
             "{}?not_subcategory=True".format(reverse("transaction-category-list"))
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), len(parent_categories))
+        self.assertEqual(response.json()["count"], len(parent_categories))

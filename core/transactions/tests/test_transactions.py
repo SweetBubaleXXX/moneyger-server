@@ -30,18 +30,17 @@ class TransactionListViewTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_no_transactions(self):
-        """Response must be an empty list if there are on transactions."""
+        """Response must be empty if there are on transactions."""
         response = self.client.get(reverse("transaction-list"))
-        self.assertListEqual(response.json(), [])
+        self.assertEqual(response.json()["count"], 0)
 
     def test_transactions_list_amount(self):
-        """Response list must contain correct amount of items."""
+        """Response must contain correct amount of items."""
         self.create_transactions_batch(10, AccountFactory())
         own_transactions = self.create_transactions_batch(20)
         response = self.client.get(reverse("transaction-list"))
         response_list = response.json()
-        self.assertIsInstance(response_list, list)
-        self.assertEqual(len(response_list), len(own_transactions))
+        self.assertEqual(response.json()["count"], len(own_transactions))
 
 
 class TransactionDetailsViewTests(BaseTestCase):
@@ -130,16 +129,15 @@ class TransactionDetailsViewTests(BaseTestCase):
 
 
 class CategorizedTransactionViewTests(BaseTestCase):
-    def test_transactions_list_amount(self):
-        """Response list must contain only transactions of current category."""
+    def test_list_transactions(self):
+        """Response must contain only transactions of current category."""
         self.create_transactions_batch(10)
         category = self.create_category()
         transactions = self.create_transactions_batch(5, category=category)
         response = self.client.get(
             reverse("transaction-category-transactions", args=(category.id,))
         )
-        response_list = response.json()
-        self.assertEqual(len(response_list), len(transactions))
+        self.assertEqual(response.json()["count"], len(transactions))
 
     def test_add_transaction_required_fields(self):
         """
@@ -245,7 +243,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
 
 class TransactionFilterTests(BaseTestCase):
     def test_transaction_type_filter(self):
-        """Response list must contain only transactions of provided type."""
+        """Response must contain only transactions of provided type."""
         self.create_transactions_batch(
             10, category=self.create_category(transaction_type=TransactionType.OUTCOME)
         )
@@ -256,7 +254,7 @@ class TransactionFilterTests(BaseTestCase):
             "{}?category__transaction_type=IN".format(reverse("transaction-list"))
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()), len(income_transactions))
+        self.assertEqual(response.json()["count"], len(income_transactions))
 
     def test_other_account_category_filter(self):
         """Forbid displaying transactions that belong to another account."""
@@ -273,7 +271,7 @@ class TransactionFilterTests(BaseTestCase):
         )
 
     def test_category_filter(self):
-        """Response list must contain only transactions of provided category."""
+        """Response must contain only transactions of provided category."""
         self.create_transactions_batch(5, category=self.create_category())
         selected_category = self.create_category()
         selected_category_transactions = self.create_transactions_batch(
@@ -282,4 +280,4 @@ class TransactionFilterTests(BaseTestCase):
         response = self.client.get(
             "{}?category={}".format(reverse("transaction-list"), selected_category.id)
         )
-        self.assertEqual(len(response.json()), len(selected_category_transactions))
+        self.assertEqual(response.json()["count"], len(selected_category_transactions))

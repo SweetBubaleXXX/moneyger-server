@@ -8,13 +8,13 @@ from .factories import AccountFactory
 
 class TransactionSubcategoryViewTests(BaseTestCase):
     def test_no_subcategories(self):
-        """Response must be an empty list if there are on subcategories."""
+        """Response must be empty if there are on subcategories."""
         parent_category = self.create_category()
         response = self.client.get(
             reverse("transaction-category-subcategories", args=(parent_category.id,))
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(response.json(), [])
+        self.assertEqual(response.json()["count"], 0)
 
     def test_list_subcategories_of_other_account(self):
         """Response 404 when trying to get subcategories of other account."""
@@ -26,16 +26,14 @@ class TransactionSubcategoryViewTests(BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_subcategories_list_amount(self):
-        """Response list must contain correct amount of items."""
+    def test_list_subcategories(self):
+        """Response must contain correct amount of items."""
         parent_category = self.create_category()
         categories = self.create_categories_batch(10, parent_category=parent_category)
         response = self.client.get(
             reverse("transaction-category-subcategories", args=(parent_category.id,))
         )
-        response_list = response.json()
-        self.assertIsInstance(response_list, list)
-        self.assertEqual(len(response_list), len(categories))
+        self.assertEqual(response.json()["count"], len(categories))
 
     def test_add_subcategory_to_other_account(self):
         """Response 404 when trying to add subcategory to other account."""
