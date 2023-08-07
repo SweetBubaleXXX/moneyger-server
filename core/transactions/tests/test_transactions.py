@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 
-from ...constants import CurrencyChoices, TransactionType
+from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
 from .base import BaseTestCase
 from .factories import AccountFactory
@@ -106,7 +106,7 @@ class TransactionDetailsViewTests(BaseTestCase):
         transaction = self.create_transaction()
         request_body = {
             "amount": "123.45",
-            "currency": CurrencyChoices.EUR,
+            "currency": CurrencyCode.EUR,
             "comment": "New comment",
         }
         response = self.client.put(
@@ -157,7 +157,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
             reverse("transaction-category-transactions", args=(category.id,)),
             {
                 "amount": -100,
-                "currency": CurrencyChoices.USD,
+                "currency": CurrencyCode.USD,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -169,7 +169,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
             reverse("transaction-category-transactions", args=(category.id,)),
             {
                 "amount": 0,
-                "currency": CurrencyChoices.USD,
+                "currency": CurrencyCode.USD,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -180,7 +180,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
             reverse("transaction-category-transactions", args=(12345,)),
             {
                 "amount": 555,
-                "currency": CurrencyChoices.USD,
+                "currency": CurrencyCode.USD,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -196,7 +196,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
             ),
             {
                 "amount": 555,
-                "currency": CurrencyChoices.USD,
+                "currency": CurrencyCode.USD,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -208,7 +208,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
         )
         request_body = {
             "amount": "123.45",
-            "currency": CurrencyChoices.EUR,
+            "currency": CurrencyCode.EUR,
             "comment": "Comment",
         }
         response = self.client.post(

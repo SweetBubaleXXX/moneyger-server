@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class CurrencyChoices(models.TextChoices):
+class CurrencyCode(models.TextChoices):
     USD = "USD"
     EUR = "EUR"
     BYN = "BYN"

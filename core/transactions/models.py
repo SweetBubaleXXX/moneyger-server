@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from ..constants import CurrencyChoices, TransactionType
+from ..constants import CurrencyCode, TransactionType
 from ..services import currency
 
 
@@ -54,7 +54,7 @@ class Transaction(BaseModel):
         related_name="transactions",
     )
     amount = models.BigIntegerField(validators=(MinValueValidator(1),))
-    currency = models.CharField(max_length=3, choices=CurrencyChoices.choices)
+    currency = models.CharField(max_length=3, choices=CurrencyCode.choices)
     comment = models.CharField(max_length=255, blank=True)
     transaction_time = models.DateTimeField(default=timezone.now)
 
