@@ -105,7 +105,7 @@ class TransactionDetailsViewTests(BaseTestCase):
         """Transaction must have provided fields changed."""
         transaction = self.create_transaction()
         request_body = {
-            "amount": 555,
+            "amount": "123.45",
             "currency": CurrencyChoices.EUR,
             "comment": "New comment",
         }
@@ -207,7 +207,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
             transaction_type=TransactionType.INCOME,
         )
         request_body = {
-            "amount": 555,
+            "amount": "123.45",
             "currency": CurrencyChoices.EUR,
             "comment": "Comment",
         }

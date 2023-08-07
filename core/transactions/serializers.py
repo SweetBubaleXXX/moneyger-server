@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from .models import Transaction, TransactionCategory
@@ -25,10 +27,17 @@ class TransactionCategoryUpdateSerializer(TransactionCategorySerializer):
         )
 
 
+class PositiveDecimalField(serializers.DecimalField):
+    def to_internal_value(self, data):
+        if Decimal(data) <= 0:
+            raise serializers.ValidationError("Ensure this value is greater than 0.")
+        return super().to_internal_value(data)
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     category = serializers.IntegerField(source="category_id", read_only=True)
-    amount = serializers.DecimalField(
-        source="amount_decimal", min_value=0, max_digits=15, decimal_places=None
+    amount = PositiveDecimalField(
+        source="amount_decimal", max_digits=15, decimal_places=None
     )
     transaction_type = serializers.ReadOnlyField(source="category.transaction_type")
 
