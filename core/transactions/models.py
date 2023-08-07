@@ -1,6 +1,6 @@
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
@@ -56,7 +56,9 @@ class Transaction(BaseModel):
     amount = models.BigIntegerField(validators=(MinValueValidator(1),))
     currency = models.CharField(max_length=3, choices=CurrencyCode.choices)
     comment = models.CharField(max_length=255, blank=True)
-    transaction_time = models.DateTimeField(default=timezone.now)
+    transaction_time = models.DateTimeField(
+        default=timezone.now, validators=(MaxValueValidator(timezone.now),)
+    )
 
     @property
     def amount_decimal(self):

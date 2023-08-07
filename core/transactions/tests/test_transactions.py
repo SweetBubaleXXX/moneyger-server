@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from ...constants import CurrencyCode, TransactionType
@@ -170,6 +173,21 @@ class CategorizedTransactionViewTests(BaseTestCase):
             {
                 "amount": 0,
                 "currency": CurrencyCode.USD,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_future_transaction(self):
+        """Disallow adding transactions with future transaction time."""
+        category = self.create_category(
+            transaction_type=TransactionType.OUTCOME,
+        )
+        response = self.client.post(
+            reverse("transaction-category-transactions", args=(category.id,)),
+            {
+                "amount": 555,
+                "currency": CurrencyCode.USD,
+                "transaction_time": timezone.now() + timedelta(days=7),
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
