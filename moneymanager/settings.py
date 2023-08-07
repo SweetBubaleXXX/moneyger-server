@@ -148,3 +148,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 100,
 }
+
+ALFA_BANK_NATIONAL_RATES_URL = env(
+    "ALFA_BANK_NATIONAL_RATES_URL",
+    default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",
+)
