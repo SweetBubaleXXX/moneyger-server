@@ -54,7 +54,9 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
         except (requests.RequestException, AssertionError) as e:
             raise FetchRatesException(settings.ALFA_BANK_NATIONAL_RATES_URL) from e
         return {
-            currency["iso"]: Decimal(currency["rate"]) / Decimal(currency["quantity"])
+            currency["iso"]: (
+                Decimal(str(currency["rate"])) / Decimal(currency["quantity"])
+            )
             for currency in filter(
                 lambda currency: currency["iso"] in CurrencyCode.values,
                 rates,
