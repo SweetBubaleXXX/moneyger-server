@@ -44,7 +44,9 @@ class BaseRates(Generic[T], metaclass=ABCMeta):
 
     @abstractmethod
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
-        pass
+        for currency in (cur_from, cur_to):
+            if currency not in self.supported_currencies:
+                raise ValueError(f"No rates for {currency}")
 
 
 class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
@@ -67,6 +69,7 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
         }
 
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
+        super().get_rate(cur_from, cur_to)
         if cur_from == cur_to:
             return Decimal(1)
         rates = self.get_data()
