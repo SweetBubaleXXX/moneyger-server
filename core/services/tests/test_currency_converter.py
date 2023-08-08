@@ -22,13 +22,15 @@ class CurrencyConverterTestCase(TestCase):
     def test_convert(self):
         """Must return correct result."""
         for amount, rate, expected_value, cur_from, cur_to in (
-            (Decimal("1"), Decimal("1"), Decimal("1"), CurrencyCode.BYN, CurrencyCode.EUR),
-            (Decimal("25.5"), Decimal("0.233"), Decimal("5.94"), CurrencyCode.USD, CurrencyCode.EUR),
-            (Decimal("124"), Decimal("0.00094"), Decimal("0.12"), CurrencyCode.RUB, CurrencyCode.BYN),
-            (Decimal("1"), Decimal("0.0000001"), Decimal("0"), CurrencyCode.BYN, CurrencyCode.USD),
-            (Decimal("0.03"), Decimal("70"), Decimal("2.1"), CurrencyCode.USD, CurrencyCode.RUB),
+            ("1", "1", "1", CurrencyCode.BYN, CurrencyCode.EUR),
+            ("25.5", "0.233", "5.94", CurrencyCode.USD, CurrencyCode.EUR),
+            ("124", "0.00094", "0.12", CurrencyCode.RUB, CurrencyCode.BYN),
+            ("1", "0.0000001", "0", CurrencyCode.BYN, CurrencyCode.USD),
+            ("0.03", "70", "2.1", CurrencyCode.USD, CurrencyCode.RUB),
         ):
-            with self.subTest(amount=amount, rate=rate, cur_from=cur_from, cur_to=cur_to):
-                self.rates.get_rate.return_value = rate
-                result = self.converter.convert(amount, cur_from, cur_to)
-                self.assertEqual(result, expected_value)
+            with self.subTest(
+                amount=amount, rate=rate, cur_from=cur_from, cur_to=cur_to
+            ):
+                self.rates.get_rate.return_value = Decimal(rate)
+                result = self.converter.convert(Decimal(amount), cur_from, cur_to)
+                self.assertEqual(result, Decimal(expected_value))
