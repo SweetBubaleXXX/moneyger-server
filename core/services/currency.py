@@ -12,4 +12,4 @@ def int_to_decimal(value: int, currency_code: CurrencyCode) -> Decimal:
 
 def decimal_to_int(value: Decimal, currency_code: CurrencyCode) -> int:
     decimal_places = Currency(currency_code).exponent
-    return int(value * 10**decimal_places)
+    return round(value * 10**decimal_places)
