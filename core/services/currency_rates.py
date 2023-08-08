@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterable
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from typing import Generic, TypeVar
@@ -23,6 +24,8 @@ class FetchRatesException(BaseException):
 
 
 class BaseRates(Generic[T], metaclass=ABCMeta):
+    supported_currencies: Iterable[str] = CurrencyCode.values
+
     def _seconds_to_midnight(self) -> int:
         now = datetime.utcnow()
         midnight = datetime.combine(now + timedelta(days=1), time())
