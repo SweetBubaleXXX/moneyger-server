@@ -13,6 +13,15 @@ from ..constants import CurrencyCode
 T = TypeVar("T")
 
 
+class FetchRatesException(BaseException):
+    def __init__(self, url: str | None = None) -> None:
+        if url:
+            message = "Failed to fetch rates"
+        else:
+            message = f"Failed to fetch rates from {url}"
+        super().__init__(message)
+
+
 class BaseRates(Generic[T], metaclass=ABCMeta):
     def _seconds_to_midnight(self) -> int:
         now = datetime.utcnow()
@@ -43,11 +52,7 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
             rates = res.json().get("rates")
             assert rates, "Rates list is empty"
         except (requests.RequestException, AssertionError) as e:
-            raise Exception(
-                "Failed to fetch data from {}, status <{}>, response: {}".format(
-                    settings.ALFA_BANK_NATIONAL_RATES_URL, res.status_code, res.text
-                )
-            ) from e
+            raise FetchRatesException(settings.ALFA_BANK_NATIONAL_RATES_URL) from e
         return {
             currency["iso"]: Decimal(currency["rate"]) / Decimal(currency["quantity"])
             for currency in filter(
