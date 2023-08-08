@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from ...constants import CurrencyCode
 from ..currency import CurrencyConverter
-from ..currency_rates import BaseRates
+from ..rates_providers import BaseRates
 
 
 class CurrencyConverterTestCase(TestCase):

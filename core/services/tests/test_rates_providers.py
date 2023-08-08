@@ -7,7 +7,7 @@ from django.test import TestCase
 from rest_framework import status
 
 from ...constants import CurrencyCode
-from ..currency_rates import AlfaBankNationalRates, FetchRatesException
+from ..rates_providers import AlfaBankNationalRates, FetchRatesException
 from . import rates_responses
 
 
