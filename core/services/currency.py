@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from iso4217 import Currency
 
-from .currency_rates import BaseRates
 from ..constants import CurrencyCode
+from .currency_rates import BaseRates
 
 
 def int_to_decimal(value: int, currency_code: CurrencyCode) -> Decimal:

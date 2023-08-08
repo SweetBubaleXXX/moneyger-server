@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
 
+from ...constants import CurrencyCode
 from ..currency import CurrencyConverter
 from ..currency_rates import BaseRates
-from ...constants import CurrencyCode
 
 
 class CurrencyConverterTestCase(TestCase):
