@@ -6,6 +6,7 @@ from typing import Generic, TypeVar
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from rest_framework import status
 
 from ..constants import CurrencyCode
 
@@ -36,12 +37,22 @@ class BaseRates(Generic[T], metaclass=ABCMeta):
 
 class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
     def fetch_data(self) -> dict[str, Decimal]:
-        res = requests.get(settings.ALFA_BANK_NATIONAL_RATES_URL)
+        try:
+            res = requests.get(settings.ALFA_BANK_NATIONAL_RATES_URL)
+            assert res.status_code == status.HTTP_200_OK
+            rates = res.json().get("rates")
+            assert rates, "Rates list is empty"
+        except (requests.RequestException, AssertionError) as e:
+            raise Exception(
+                "Failed to fetch data from {}, status <{}>, response: {}".format(
+                    settings.ALFA_BANK_NATIONAL_RATES_URL, res.status_code, res.text
+                )
+            ) from e
         return {
             currency["iso"]: Decimal(currency["rate"]) / Decimal(currency["quantity"])
             for currency in filter(
                 lambda currency: currency["iso"] in CurrencyCode.values,
-                res.json()["rates"],
+                rates,
             )
         }
 
