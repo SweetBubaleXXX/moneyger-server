@@ -57,8 +57,15 @@ class AlfaBankNationalRatesTestCase(CacheClearTestCase):
             self.assertIn(currency, CurrencyCode)
 
     def test_unsupported_currencies(self):
-        with self.assertRaisesMessage(ValueError, "No rates for ABC"):
-            self.rates.get_rate(CurrencyCode.EUR, "ABC")
+        """
+        ValueError with correct message must be raised if currency isn't supported.
+        """
+        unsupported_currency = "ABC"
+        self.assertNotIn(unsupported_currency, self.rates.supported_currencies)
+        with self.assertRaisesMessage(
+            ValueError, f"No rates for {unsupported_currency}"
+        ):
+            self.rates.get_rate(CurrencyCode.EUR, unsupported_currency)
 
     def test_get_data_empty_cache(self):
         """fetch_data method must be called when no data in cache."""
