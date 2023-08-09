@@ -73,9 +73,9 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
         if cur_from == cur_to:
             return Decimal(1)
         rates = self.get_data()
-        if cur_to is CurrencyCode.BYN:
-            return rates[cur_from.value]
-        if cur_from is CurrencyCode.BYN:
-            return Decimal(1) / rates[cur_to.value]
-        rate_to_byn = rates[cur_from.value]
-        return rate_to_byn / rates[cur_to.value]
+        if cur_to == CurrencyCode.BYN:
+            return rates[cur_from]
+        if cur_from == CurrencyCode.BYN:
+            return Decimal(1) / rates[cur_to]
+        rate_to_byn = rates[cur_from]
+        return rate_to_byn / rates[cur_to]
