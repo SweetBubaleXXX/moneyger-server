@@ -30,6 +30,6 @@ class CurrencyConverter:
 
     def convert(
         self, amount: Decimal, cur_from: CurrencyCode, cur_to: CurrencyCode
-    ) -> Decimal:
+    ) -> Decimal | int:
         rate = self._rates_provider.get_rate(cur_from, cur_to)
         return round(amount * rate, Currency(cur_to).exponent)
