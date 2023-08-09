@@ -3,7 +3,11 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .filters import TransactionCategoryFilter, TransactionFilter
+from .filters import (
+    TransactionCategoryFilter,
+    TransactionFilter,
+    TransactionSummaryFilter,
+)
 from .permissions import IsOwnAccount
 from .serializers import (
     TransactionCategorySerializer,
@@ -11,6 +15,7 @@ from .serializers import (
     TransactionSerializer,
     TransactionUpdateSerializer,
 )
+from .services import compute_total
 
 
 class TransactionCategoryViewSet(viewsets.ModelViewSet):
@@ -101,3 +106,18 @@ class TransactionDetailView(
     TransactionViewMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     serializer_class = TransactionUpdateSerializer
+
+
+class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TransactionSummaryFilter
+
+    def get(self, request, format=None):
+        transactions = self.filter_queryset(self.get_queryset())
+        total = compute_total(transactions, request.user.default_currency, ...)
+        return Response(
+            {
+                "total": total,
+                "currency": request.user.default_currency,
+            }
+        )

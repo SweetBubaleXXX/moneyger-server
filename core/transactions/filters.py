@@ -1,5 +1,6 @@
 from django_filters import rest_framework as filters
 
+from ..constants import TransactionType
 from .models import Transaction, TransactionCategory
 
 
@@ -30,3 +31,15 @@ class TransactionFilter(filters.FilterSet):
             "category__transaction_type",
             "currency",
         )
+
+
+class TransactionSummaryFilter(filters.FilterSet):
+    category = filters.ModelChoiceFilter(queryset=get_user_categories)
+    transaction_type = filters.ChoiceFilter(
+        "category__transaction_type", choices=TransactionType.choices
+    )
+    transaction_time = filters.DateTimeFromToRangeFilter("transaction_time")
+
+    class Meta:
+        model = Transaction
+        fields = []
