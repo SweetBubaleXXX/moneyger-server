@@ -1,6 +1,8 @@
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+from moneymanager import services_container
+
 from ...constants import CurrencyCode, TransactionType
 from ...services.currency import CurrencyConverter
 from ..services import compute_total
@@ -16,6 +18,7 @@ class ComputeTotalTestCase(BaseTestCase):
         self.converter_mock.convert.side_effect = (
             lambda amount, *_: amount * self.CONVERTION_RATE
         )
+        services_container.currency_converter.override(self.converter_mock)
         self.income_category = self.create_category(
             transaction_type=TransactionType.INCOME
         )
@@ -23,9 +26,12 @@ class ComputeTotalTestCase(BaseTestCase):
             transaction_type=TransactionType.OUTCOME
         )
 
+    def tearDown(self):
+        services_container.reset_override()
+
     def test_no_transactions(self):
         """Must return 0 if there are no transactions."""
-        total = compute_total([], CurrencyCode.RUB, self.converter_mock)
+        total = compute_total([], CurrencyCode.RUB)
         self.assertEqual(total, Decimal(0))
 
     def test_income_no_convertion(self):
@@ -33,7 +39,7 @@ class ComputeTotalTestCase(BaseTestCase):
         transactions = self.create_transactions_batch(
             30, category=self.income_category, amount=200, currency=CurrencyCode.USD
         )
-        total = compute_total(transactions, CurrencyCode.USD, self.converter_mock)
+        total = compute_total(transactions, CurrencyCode.USD)
         self.assertEqual(total, Decimal(60))
 
     def test_outcome_no_convertion(self):
@@ -41,7 +47,7 @@ class ComputeTotalTestCase(BaseTestCase):
         transactions = self.create_transactions_batch(
             50, category=self.outcome_category, amount=300, currency=CurrencyCode.EUR
         )
-        total = compute_total(transactions, CurrencyCode.EUR, self.converter_mock)
+        total = compute_total(transactions, CurrencyCode.EUR)
         self.assertEqual(total, Decimal(-150))
 
     def test_income_and_outcome_no_convertion(self):
@@ -53,9 +59,7 @@ class ComputeTotalTestCase(BaseTestCase):
             50, category=self.outcome_category, amount=300, currency=CurrencyCode.BYN
         )
         total = compute_total(
-            income_transactions + outcome_transactions,
-            CurrencyCode.BYN,
-            self.converter_mock,
+            income_transactions + outcome_transactions, CurrencyCode.BYN
         )
         self.assertEqual(total, Decimal(-90))
 
@@ -64,7 +68,7 @@ class ComputeTotalTestCase(BaseTestCase):
         transactions = self.create_transactions_batch(
             10, category=self.income_category, amount=10, currency=CurrencyCode.USD
         )
-        compute_total(transactions, CurrencyCode.BYN, self.converter_mock)
+        compute_total(transactions, CurrencyCode.BYN)
         self.converter_mock.convert.assert_called_with(
             Decimal("0.1"), CurrencyCode.USD, CurrencyCode.BYN
         )
@@ -77,7 +81,5 @@ class ComputeTotalTestCase(BaseTestCase):
         byn_transactions = self.create_transactions_batch(
             5, category=self.income_category, amount=2000, currency=CurrencyCode.BYN
         )
-        total = compute_total(
-            usd_transactions + byn_transactions, CurrencyCode.BYN, self.converter_mock
-        )
+        total = compute_total(usd_transactions + byn_transactions, CurrencyCode.BYN)
         self.assertEqual(total, Decimal("50") * self.CONVERTION_RATE + Decimal("100"))

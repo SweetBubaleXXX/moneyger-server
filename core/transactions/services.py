@@ -1,15 +1,20 @@
 from collections.abc import Iterable
 from decimal import Decimal
 
+from dependency_injector.wiring import Provide, inject
+
+from moneymanager.containers import Services
+
 from ..constants import CurrencyCode, TransactionType
 from ..services.currency import CurrencyConverter
 from .models import Transaction
 
 
+@inject
 def compute_total(
     transaction_set: Iterable[Transaction],
     output_currency: CurrencyCode,
-    currency_converter: CurrencyConverter,
+    currency_converter: CurrencyConverter = Provide[Services.currency_converter],
 ) -> Decimal:
     total = Decimal(0)
     for transaction in transaction_set:

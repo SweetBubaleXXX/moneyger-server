@@ -114,7 +114,7 @@ class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
 
     def get(self, request, format=None):
         transactions = self.filter_queryset(self.get_queryset())
-        total = compute_total(transactions, request.user.default_currency, ...)
+        total = compute_total(transactions, request.user.default_currency)
         return Response(
             {
                 "total": total,
