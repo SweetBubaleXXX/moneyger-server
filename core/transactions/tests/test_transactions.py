@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from urllib.parse import quote
 
 from django.urls import reverse
 from django.utils import timezone
@@ -291,7 +292,7 @@ class TransactionSummaryViewTests(
 
     def test_filter_time(self):
         """Mustn't summarize transactions that don't match the filter."""
-        old_transactions_time = datetime.utcnow() - timedelta(days=10)
+        old_transactions_time = timezone.now() - timedelta(days=10)
         self.create_transactions_batch(
             50,
             category=self.income_category,
@@ -301,7 +302,7 @@ class TransactionSummaryViewTests(
         response = self.client.get(
             "{}?transaction_time_after={}".format(
                 reverse("transaction-summary"),
-                (old_transactions_time + timedelta(seconds=1)).isoformat(),
+                quote((old_transactions_time + timedelta(seconds=1)).isoformat()),
             )
         )
         self.assertEqual(0, response.json()["total"])
