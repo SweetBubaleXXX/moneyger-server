@@ -2,21 +2,12 @@ from decimal import Decimal
 
 from moneymanager import services_container
 
-from ...constants import CurrencyCode, TransactionType
+from ...constants import CurrencyCode
 from ..services import compute_total
-from .base import BaseTestCase, MockCurrencyConvertorMixin
+from .base import IncomeOutcomeCategoriesTestCase, MockCurrencyConvertorMixin
 
 
-class ComputeTotalTestCase(MockCurrencyConvertorMixin, BaseTestCase):
-    def setUp(self):
-        super().setUp()
-        self.income_category = self.create_category(
-            transaction_type=TransactionType.INCOME
-        )
-        self.outcome_category = self.create_category(
-            transaction_type=TransactionType.OUTCOME
-        )
-
+class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase):
     def tearDown(self):
         services_container.reset_override()
 

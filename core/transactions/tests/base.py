@@ -6,20 +6,9 @@ from rest_framework.test import APIClient
 
 from moneymanager import services_container
 
+from ...constants import TransactionType
 from ..services import CurrencyConverter
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
-
-
-class MockCurrencyConvertorMixin(TestCase):
-    CONVERTION_RATE = Decimal(2)
-
-    def setUp(self):
-        super().setUp()
-        self.converter_mock = MagicMock(CurrencyConverter)
-        self.converter_mock.convert.side_effect = (
-            lambda amount, *_: amount * self.CONVERTION_RATE
-        )
-        services_container.currency_converter.override(self.converter_mock)
 
 
 class BaseTestCase(TestCase):
@@ -57,3 +46,26 @@ class BaseTestCase(TestCase):
         return TransactionFactory.create_batch(
             size, account=account, category=category, **kwargs
         )
+
+
+class IncomeOutcomeCategoriesTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.income_category = self.create_category(
+            transaction_type=TransactionType.INCOME
+        )
+        self.outcome_category = self.create_category(
+            transaction_type=TransactionType.OUTCOME
+        )
+
+
+class MockCurrencyConvertorMixin(TestCase):
+    CONVERTION_RATE = Decimal(2)
+
+    def setUp(self):
+        super().setUp()
+        self.converter_mock = MagicMock(CurrencyConverter)
+        self.converter_mock.convert.side_effect = (
+            lambda amount, *_: amount * self.CONVERTION_RATE
+        )
+        services_container.currency_converter.override(self.converter_mock)
