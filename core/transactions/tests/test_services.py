@@ -1,24 +1,15 @@
 from decimal import Decimal
-from unittest.mock import MagicMock
 
 from moneymanager import services_container
 
 from ...constants import CurrencyCode, TransactionType
-from ...services.currency import CurrencyConverter
 from ..services import compute_total
-from .base import BaseTestCase
+from .base import BaseTestCase, MockCurrencyConvertorMixin
 
 
-class ComputeTotalTestCase(BaseTestCase):
-    CONVERTION_RATE = Decimal(2)
-
+class ComputeTotalTestCase(MockCurrencyConvertorMixin, BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.converter_mock = MagicMock(CurrencyConverter)
-        self.converter_mock.convert.side_effect = (
-            lambda amount, *_: amount * self.CONVERTION_RATE
-        )
-        services_container.currency_converter.override(self.converter_mock)
         self.income_category = self.create_category(
             transaction_type=TransactionType.INCOME
         )

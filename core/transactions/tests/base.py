@@ -1,7 +1,25 @@
+from decimal import Decimal
+from unittest.mock import MagicMock
+
 from django.test import TestCase
 from rest_framework.test import APIClient
 
+from moneymanager import services_container
+
+from ..services import CurrencyConverter
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
+
+
+class MockCurrencyConvertorMixin(TestCase):
+    CONVERTION_RATE = Decimal(2)
+
+    def setUp(self):
+        super().setUp()
+        self.converter_mock = MagicMock(CurrencyConverter)
+        self.converter_mock.convert.side_effect = (
+            lambda amount, *_: amount * self.CONVERTION_RATE
+        )
+        services_container.currency_converter.override(self.converter_mock)
 
 
 class BaseTestCase(TestCase):
