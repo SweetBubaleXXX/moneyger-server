@@ -6,7 +6,11 @@ from rest_framework import status
 
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
-from .base import BaseTestCase
+from .base import (
+    BaseTestCase,
+    MockCurrencyConvertorMixin,
+    IncomeOutcomeCategoriesTestCase,
+)
 from .factories import AccountFactory
 
 
@@ -239,6 +243,50 @@ class CategorizedTransactionViewTests(BaseTestCase):
             expected_response_subdict.items(),
             response.json().items(),
         )
+
+
+class TransactionSummaryViewTests(
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase
+):
+    def test_unauthorized(self):
+        """Try to get summary without providing authorization credentials."""
+        self.client.logout()
+        response = self.client.get(reverse("transaction-summary"))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_no_transactions(self):
+        """Total value in response must be 0 if there are no transactions."""
+        response = self.client.get(reverse("transaction-summary"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], 0)
+
+    def test_currency(self):
+        """Must use account's default currency."""
+        response = self.client.get(reverse("transaction-summary"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["currency"], self.account.default_currency)
+
+    def test_filter_outcome(self):
+        """Total value must be negative."""
+        self.create_transactions_batch(10, category=self.income_category, amount=100)
+        self.create_transactions_batch(5, category=self.outcome_category, amount=100)
+        response = self.client.get(
+            "{}?transaction_type={}".format(
+                reverse("transaction-summary"), TransactionType.OUTCOME
+            )
+        )
+        self.assertGreater(0, response.json()["total"])
+
+    def test_filter_income(self):
+        """Total value must be positive."""
+        self.create_transactions_batch(5, category=self.income_category, amount=100)
+        self.create_transactions_batch(10, category=self.outcome_category, amount=100)
+        response = self.client.get(
+            "{}?transaction_type={}".format(
+                reverse("transaction-summary"), TransactionType.INCOME
+            )
+        )
+        self.assertGreater(response.json()["total"], 0)
 
 
 class TransactionFilterTests(BaseTestCase):
