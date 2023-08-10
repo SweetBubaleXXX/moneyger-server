@@ -8,8 +8,8 @@ from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
 from .base import (
     BaseTestCase,
-    MockCurrencyConvertorMixin,
     IncomeOutcomeCategoriesTestCase,
+    MockCurrencyConvertorMixin,
 )
 from .factories import AccountFactory
 
