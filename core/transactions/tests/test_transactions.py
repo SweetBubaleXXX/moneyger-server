@@ -43,7 +43,6 @@ class TransactionListViewTests(BaseTestCase):
         self.create_transactions_batch(10, AccountFactory())
         own_transactions = self.create_transactions_batch(20)
         response = self.client.get(reverse("transaction-list"))
-        response_list = response.json()
         self.assertEqual(response.json()["count"], len(own_transactions))
 
 
