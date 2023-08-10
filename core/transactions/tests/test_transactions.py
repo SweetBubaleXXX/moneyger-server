@@ -132,14 +132,15 @@ class TransactionDetailsViewTests(BaseTestCase):
             Transaction.objects.get(pk=transaction.id)
 
 
-class CategorizedTransactionViewTests(BaseTestCase):
+class CategorizedTransactionViewTests(IncomeOutcomeCategoriesTestCase):
     def test_list_transactions(self):
         """Response must contain only transactions of current category."""
         self.create_transactions_batch(10)
-        category = self.create_category()
-        transactions = self.create_transactions_batch(5, category=category)
+        transactions = self.create_transactions_batch(5, category=self.outcome_category)
         response = self.client.get(
-            reverse("transaction-category-transactions", args=(category.id,))
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            )
         )
         self.assertEqual(response.json()["count"], len(transactions))
 
@@ -147,9 +148,10 @@ class CategorizedTransactionViewTests(BaseTestCase):
         """
         Response an error when trying to create a transaction without necessary fields.
         """
-        category = self.create_category()
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,))
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            )
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         for field in ("amount", "currency"):
@@ -157,9 +159,10 @@ class CategorizedTransactionViewTests(BaseTestCase):
 
     def test_add_transaction_negative_amount(self):
         """Response an error when trying to add a transaction with negative amount."""
-        category = self.create_category()
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
             {
                 "amount": -100,
                 "currency": CurrencyCode.USD,
@@ -169,9 +172,10 @@ class CategorizedTransactionViewTests(BaseTestCase):
 
     def test_add_transaction_zero_amount(self):
         """Response an error when trying to add a transaction with zero amount."""
-        category = self.create_category()
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
             {
                 "amount": 0,
                 "currency": CurrencyCode.USD,
@@ -181,11 +185,10 @@ class CategorizedTransactionViewTests(BaseTestCase):
 
     def test_add_future_transaction(self):
         """Disallow adding transactions with future transaction time."""
-        category = self.create_category(
-            transaction_type=TransactionType.OUTCOME,
-        )
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
             {
                 "amount": 555,
                 "currency": CurrencyCode.USD,
@@ -223,21 +226,20 @@ class CategorizedTransactionViewTests(BaseTestCase):
 
     def test_add_transaction(self):
         """Transaction must be created and have the correct transaction_type."""
-        category = self.create_category(
-            transaction_type=TransactionType.INCOME,
-        )
         request_body = {
             "amount": "123.45",
             "currency": CurrencyCode.EUR,
             "comment": "Comment",
         }
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.income_category.id,)
+            ),
             request_body,
         )
         expected_response_subdict = request_body | {
-            "category": category.id,
-            "transaction_type": category.transaction_type,
+            "category": self.income_category.id,
+            "transaction_type": TransactionType.INCOME,
         }
         self.assertLessEqual(
             expected_response_subdict.items(),
@@ -289,14 +291,12 @@ class TransactionSummaryViewTests(
         self.assertGreater(response.json()["total"], 0)
 
 
-class TransactionFilterTests(BaseTestCase):
+class TransactionFilterTests(IncomeOutcomeCategoriesTestCase):
     def test_transaction_type_filter(self):
         """Response must contain only transactions of provided type."""
-        self.create_transactions_batch(
-            10, category=self.create_category(transaction_type=TransactionType.OUTCOME)
-        )
+        self.create_transactions_batch(10, category=self.outcome_category)
         income_transactions = self.create_transactions_batch(
-            5, category=self.create_category(transaction_type=TransactionType.INCOME)
+            5, category=self.income_category
         )
         response = self.client.get(
             "{}?category__transaction_type=IN".format(reverse("transaction-list"))
