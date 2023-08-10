@@ -17,9 +17,9 @@ T = TypeVar("T")
 class FetchRatesException(BaseException):
     def __init__(self, url: str | None = None) -> None:
         if url:
-            message = "Failed to fetch rates"
-        else:
             message = f"Failed to fetch rates from {url}"
+        else:
+            message = "Failed to fetch rates"
         super().__init__(message)
 
 
