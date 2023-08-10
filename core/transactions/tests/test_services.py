@@ -3,8 +3,12 @@ from decimal import Decimal
 from moneymanager import services_container
 
 from ...constants import CurrencyCode
-from ..services import compute_total
-from .base import IncomeOutcomeCategoriesTestCase, MockCurrencyConvertorMixin
+from ..services import compute_total, get_all_subcategories
+from .base import (
+    BaseTestCase,
+    IncomeOutcomeCategoriesTestCase,
+    MockCurrencyConvertorMixin,
+)
 
 
 class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase):
@@ -65,3 +69,43 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTe
         )
         total = compute_total(usd_transactions + byn_transactions, CurrencyCode.BYN)
         self.assertEqual(total, Decimal("50") * self.CONVERTION_RATE + Decimal("100"))
+
+
+class GetAllCategoriesTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.category = self.create_category()
+
+    def test_no_subcategories(self):
+        """Must return empty QuerySet."""
+        subcategories = get_all_subcategories(self.category)
+        self.assertFalse(subcategories)
+
+    def test_depth_1(self):
+        """Test subcategory tree of depth 1."""
+        self.create_categories_batch(10, parent_category=self.category)
+        subcategories = get_all_subcategories(self.category)
+        self.assertEqual(len(subcategories), 10)
+
+    def test_depth_2(self):
+        """Test subcategory tree of depth 2."""
+        child_categories = self.create_categories_batch(
+            10, parent_category=self.category
+        )
+        for category in child_categories:
+            self.create_categories_batch(20, parent_category=category)
+        subcategories = get_all_subcategories(self.category)
+        self.assertEqual(len(subcategories), 210)
+
+    def test_depth_3(self):
+        """Test subcategory tree of depth 3."""
+        child_categories = self.create_categories_batch(
+            5, parent_category=self.category
+        )
+        for category in child_categories:
+            for subcategory in self.create_categories_batch(
+                10, parent_category=category
+            ):
+                self.create_categories_batch(5, parent_category=subcategory)
+        subcategories = get_all_subcategories(self.category)
+        self.assertEqual(len(subcategories), 305)

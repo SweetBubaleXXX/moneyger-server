@@ -7,7 +7,7 @@ from moneymanager.containers import Services
 
 from ..constants import CurrencyCode, TransactionType
 from ..services.currency import CurrencyConverter
-from .models import Transaction
+from .models import Transaction, TransactionCategory
 
 
 @inject
@@ -28,3 +28,12 @@ def compute_total(
         else:
             total += amount
     return total
+
+
+def get_all_subcategories(
+    category: TransactionCategory,
+) -> Iterable[TransactionCategory]:
+    subcategories = category.subcategories.all()
+    for child in subcategories:
+        subcategories = subcategories.union(get_all_subcategories(child))
+    return subcategories
