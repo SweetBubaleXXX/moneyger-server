@@ -71,7 +71,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTe
         self.assertEqual(total, Decimal("50") * self.CONVERTION_RATE + Decimal("100"))
 
 
-class GetAllCategoriesTestCase(BaseTestCase):
+class GetAllSubategoriesTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.category = self.create_category()
@@ -117,7 +117,7 @@ class GetAllTransactionsTestCase(BaseTestCase):
         self.category = self.create_category()
 
     def test_depth_1(self):
-        """Test subcategory tree of depth 1."""
+        """Must return all transactions of subcategory tree with depth 1."""
         self.create_transactions_batch(3, category=self.category)
         for category in self.create_categories_batch(10, parent_category=self.category):
             self.create_transactions_batch(5, category=category)
@@ -125,7 +125,7 @@ class GetAllTransactionsTestCase(BaseTestCase):
         self.assertEqual(transactions.count(), 53)
 
     def test_depth_2(self):
-        """Test subcategory tree of depth 2."""
+        """Must return all transactions of subcategory tree with depth 2."""
         child_categories = self.create_categories_batch(
             10, parent_category=self.category
         )
