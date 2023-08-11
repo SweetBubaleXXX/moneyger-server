@@ -78,6 +78,23 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
+    @action(
+        detail=True,
+        methods=("get",),
+        url_name="summary",
+    )
+    def summary(self, request, category_id=None):
+        transactions = TransactionFilter(
+            request.query_params, services.get_all_transactions(self.get_object())
+        ).qs
+        total = services.compute_total(transactions, request.user.default_currency)
+        return Response(
+            {
+                "total": total,
+                "currency": request.user.default_currency,
+            }
+        )
+
     def _paginated_response(self, queryset):
         page = self.paginate_queryset(queryset)
         if page is not None:
