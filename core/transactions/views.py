@@ -3,6 +3,7 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from . import services
 from .filters import (
     TransactionCategoryFilter,
     TransactionFilter,
@@ -15,7 +16,6 @@ from .serializers import (
     TransactionSerializer,
     TransactionUpdateSerializer,
 )
-from .services import compute_total
 
 
 class TransactionCategoryViewSet(viewsets.ModelViewSet):
@@ -42,13 +42,8 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         url_name="subcategories",
     )
     def subcategories(self, request, category_id=None):
-        subcategories = self.get_object().subcategories.all()
-        page = self.paginate_queryset(subcategories)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(subcategories, many=True)
-        return Response(serializer.data)
+        subcategories = services.get_all_subcategories(self.get_object())
+        return self._paginated_response(subcategories)
 
     @subcategories.mapping.post
     def add_subcategory(self, request, category_id=None):
@@ -70,13 +65,8 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         url_name="transactions",
     )
     def transactions(self, request, category_id=None):
-        transactions = self.get_object().transactions.all()
-        page = self.paginate_queryset(transactions)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(transactions, many=True)
-        return Response(serializer.data)
+        transactions = services.get_all_transactions(self.get_object())
+        return self._paginated_response(transactions)
 
     @transactions.mapping.post
     def add_transaction(self, request, category_id=None):
@@ -86,6 +76,14 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
             account=request.user,
             category=self.get_object(),
         )
+        return Response(serializer.data)
+
+    def _paginated_response(self, queryset):
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
@@ -114,7 +112,7 @@ class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
 
     def get(self, request, format=None):
         transactions = self.filter_queryset(self.get_queryset())
-        total = compute_total(transactions, request.user.default_currency)
+        total = services.compute_total(transactions, request.user.default_currency)
         return Response(
             {
                 "total": total,

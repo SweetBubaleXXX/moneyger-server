@@ -30,6 +30,13 @@ def compute_total(
     return total
 
 
+def get_all_transactions(category: TransactionCategory) -> Iterable[Transaction]:
+    transactions = category.transactions.all()
+    for subcategory in category.subcategories.all():
+        transactions = transactions.union(get_all_transactions(subcategory))
+    return transactions
+
+
 def get_all_subcategories(
     category: TransactionCategory,
 ) -> Iterable[TransactionCategory]:

@@ -144,6 +144,20 @@ class CategorizedTransactionViewTests(IncomeOutcomeCategoriesTestCase):
         )
         self.assertEqual(response.json()["count"], len(transactions))
 
+    def test_list_transactions_recursive(self):
+        """Response must contain transactions of subcategories."""
+        subcategories = self.create_categories_batch(
+            30, parent_category=self.outcome_category
+        )
+        for category in subcategories:
+            self.create_transactions_batch(5, category=category)
+        response = self.client.get(
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            )
+        )
+        self.assertEqual(response.json()["count"], 150)
+
     def test_add_transaction_required_fields(self):
         """
         Response an error when trying to create a transaction without necessary fields.
