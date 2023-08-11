@@ -85,7 +85,7 @@ class GetAllCategoriesTestCase(BaseTestCase):
         """Test subcategory tree of depth 1."""
         self.create_categories_batch(10, parent_category=self.category)
         subcategories = get_all_subcategories(self.category)
-        self.assertEqual(len(subcategories), 10)
+        self.assertEqual(subcategories.count(), 10)
 
     def test_depth_2(self):
         """Test subcategory tree of depth 2."""
@@ -95,7 +95,7 @@ class GetAllCategoriesTestCase(BaseTestCase):
         for category in child_categories:
             self.create_categories_batch(20, parent_category=category)
         subcategories = get_all_subcategories(self.category)
-        self.assertEqual(len(subcategories), 210)
+        self.assertEqual(subcategories.count(), 210)
 
     def test_depth_3(self):
         """Test subcategory tree of depth 3."""
@@ -108,4 +108,4 @@ class GetAllCategoriesTestCase(BaseTestCase):
             ):
                 self.create_categories_batch(5, parent_category=subcategory)
         subcategories = get_all_subcategories(self.category)
-        self.assertEqual(len(subcategories), 305)
+        self.assertEqual(subcategories.count(), 305)

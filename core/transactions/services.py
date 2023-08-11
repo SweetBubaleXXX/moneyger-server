@@ -30,17 +30,20 @@ def compute_total(
     return total
 
 
-def get_all_transactions(category: TransactionCategory) -> Iterable[Transaction]:
-    transactions = category.transactions.all()
-    for subcategory in category.subcategories.all():
-        transactions = transactions.union(get_all_transactions(subcategory))
-    return transactions
+def iter_categories_tree(category_id: int):
+    yield category_id
+    subcategories = TransactionCategory.objects.filter(
+        parent_category=category_id
+    ).values_list("id", flat=True)
+    for child_id in subcategories:
+        yield from iter_categories_tree(child_id)
 
 
-def get_all_subcategories(
-    category: TransactionCategory,
-) -> Iterable[TransactionCategory]:
-    subcategories = category.subcategories.all()
-    for child in subcategories:
-        subcategories = subcategories.union(get_all_subcategories(child))
-    return subcategories
+def get_all_subcategories(category: TransactionCategory):
+    return TransactionCategory.objects.filter(
+        parent_category__in=iter_categories_tree(category.id)
+    )
+
+
+def get_all_transactions(category: TransactionCategory):
+    return Transaction.objects.filter(category__in=iter_categories_tree(category.id))
