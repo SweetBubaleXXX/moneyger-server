@@ -62,15 +62,7 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
             assert rates, "Rates list is empty"
         except (requests.RequestException, AssertionError) as e:
             raise FetchRatesException(settings.ALFA_BANK_NATIONAL_RATES_URL) from e
-        return {
-            currency["iso"]: (
-                Decimal(str(currency["rate"])) / Decimal(currency["quantity"])
-            )
-            for currency in filter(
-                lambda currency: currency["iso"] in CurrencyCode.values,
-                rates,
-            )
-        }
+        return self._parse_rates(rates)
 
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
         self.validate_currencies(cur_from, cur_to)
@@ -83,3 +75,15 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
             return Decimal(1) / rates[cur_to.value]
         rate_to_byn = rates[cur_from.value]
         return rate_to_byn / rates[cur_to.value]
+
+    def _parse_rates(self, rates):
+        essential_rates = filter(
+            lambda currency: currency["iso"] in CurrencyCode.values,
+            rates,
+        )
+        return {
+            currency["iso"]: (
+                Decimal(str(currency["rate"])) / Decimal(currency["quantity"])
+            )
+            for currency in essential_rates
+        }
