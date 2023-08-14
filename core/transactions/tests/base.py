@@ -56,9 +56,9 @@ class BaseViewTestCase(BaseTestCase):
             request = self.request_factory.get(path)
             self.__call_view(path, request, **kwargs)
 
-    def _test_post_queries_number(self, num, path, **kwargs):
+    def _test_post_queries_number(self, num, path, data, **kwargs):
         with self.assertNumQueries(num):
-            request = self.request_factory.post(path, kwargs.get("data"))
+            request = self.request_factory.post(path, data)
             self.__call_view(path, request, **kwargs)
 
     def __call_view(self, path, request, **kwargs):

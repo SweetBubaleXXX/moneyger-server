@@ -75,6 +75,20 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         response = self.client.post(reverse("transaction-category-list"), request_body)
         self.assertEqual(response.json()["parent_category"], None)
 
+    def test_add_category_queries_number(self):
+        """Exactly 2 queries must be performed.
+
+        One for adding new category, one for historical record.
+        """
+        self._test_post_queries_number(
+            2,
+            reverse("transaction-category-list"),
+            data={
+                "transaction_type": TransactionType.OUTCOME,
+                "name": "Category",
+            },
+        )
+
     def test_category_not_found(self):
         """Response 404 if category doesn't exist."""
         response = self.client.get(

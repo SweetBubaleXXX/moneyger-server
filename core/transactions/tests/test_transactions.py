@@ -37,6 +37,10 @@ class TransactionListViewTests(BaseViewTestCase):
         own_transactions = self.create_transactions_batch(20)
         self._test_list_count(reverse("transaction-list"), len(own_transactions))
 
+    def test_list_queries_number(self):
+        """Exactly 1 query must be performed."""
+        self._test_get_queries_number(1, reverse("transaction-list"))
+
 
 class TransactionDetailsViewTests(BaseViewTestCase):
     def test_transaction_not_found(self):
@@ -132,6 +136,15 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
         self._test_list_count(
             reverse("transaction-category-transactions", args=(category.id,)),
             len(transactions),
+        )
+
+    def test_list_queries_number(self):
+        """Exactly 2 queries must be performed."""
+        category = self.create_category()
+        self._test_get_queries_number(
+            2,
+            reverse("transaction-category-transactions", args=(category.id,)),
+            category_id=category.id,
         )
 
     def test_add_transaction_required_fields(self):
@@ -233,6 +246,20 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
         self.assertLessEqual(
             expected_response_subdict.items(),
             response.json().items(),
+        )
+
+    def test_add_transaction_queries_number(self):
+        """Exactly 3 queries must be performed."""
+        category = self.create_category()
+        self._test_post_queries_number(
+            3,
+            reverse("transaction-category-transactions", args=(category.id,)),
+            data={
+                "category": category.id,
+                "amount": "1.23",
+                "currency": CurrencyCode.BYN,
+            },
+            category_id=category.id,
         )
 
 

@@ -42,6 +42,16 @@ class TransactionSubcategoryViewTests(BaseViewTestCase):
             len(categories),
         )
 
+    def test_list_queries_number(self):
+        """Exactly 2 queries must be performed."""
+        self._test_get_queries_number(
+            2,
+            reverse(
+                "transaction-category-subcategories", args=(self.parent_category.id,)
+            ),
+            category_id=self.parent_category.id,
+        )
+
     def test_add_subcategory_to_other_account(self):
         """Response 404 when trying to add subcategory to other account."""
         other_account_category = self.create_category(
@@ -78,4 +88,16 @@ class TransactionSubcategoryViewTests(BaseViewTestCase):
         self.assertLessEqual(
             expected_response_subdict.items(),
             response.json().items(),
+        )
+
+    def test_add_subcategory_queries_number(self):
+        """Exactly 3 queries must be performed."""
+        self._test_post_queries_number(
+            3,
+            reverse(
+                "transaction-category-subcategories",
+                args=(self.parent_category.id,),
+            ),
+            data={"name": "Subcategory"},
+            category_id=self.parent_category.id,
         )
