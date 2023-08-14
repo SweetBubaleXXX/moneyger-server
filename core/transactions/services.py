@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from dependency_injector.wiring import Provide, inject
 
-from moneymanager.containers import Services
+from moneymanager.utils import Services
 
 from ..constants import CurrencyCode, TransactionType
 from ..services.currency import CurrencyConverter
