@@ -6,16 +6,14 @@ from rest_framework import status
 
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
-from .base import BaseTestCase
+from .base import BaseViewTestCase
 from .factories import AccountFactory
 
 
-class TransactionListViewTests(BaseTestCase):
-    def test_unauthorized(self):
+class TransactionListViewTests(BaseViewTestCase):
+    def test_list_transactions_unauthorized(self):
         """Try to get transactions list without providing authorization credentials."""
-        self.client.logout()
-        response = self.client.get(reverse("transaction-list"))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self._test_get_unauthorized(reverse("transaction-list"))
 
     def test_cannot_add_transaction(self):
         """Forbid creating transactions using this route."""
@@ -31,19 +29,16 @@ class TransactionListViewTests(BaseTestCase):
 
     def test_no_transactions(self):
         """Response must be empty if there are on transactions."""
-        response = self.client.get(reverse("transaction-list"))
-        self.assertEqual(response.json()["count"], 0)
+        self._test_list_count(reverse("transaction-list"), 0)
 
     def test_transactions_list_amount(self):
         """Response must contain correct amount of items."""
         self.create_transactions_batch(10, AccountFactory())
         own_transactions = self.create_transactions_batch(20)
-        response = self.client.get(reverse("transaction-list"))
-        response_list = response.json()
-        self.assertEqual(response.json()["count"], len(own_transactions))
+        self._test_list_count(reverse("transaction-list"), len(own_transactions))
 
 
-class TransactionDetailsViewTests(BaseTestCase):
+class TransactionDetailsViewTests(BaseViewTestCase):
     def test_transaction_not_found(self):
         """Response 404 if transaction doesn't exist."""
         response = self.client.get(reverse("transaction-detail", args=(12345,)))
@@ -128,16 +123,16 @@ class TransactionDetailsViewTests(BaseTestCase):
             Transaction.objects.get(pk=transaction.id)
 
 
-class CategorizedTransactionViewTests(BaseTestCase):
+class CategorizedTransactionViewTests(BaseViewTestCase):
     def test_list_transactions(self):
         """Response must contain only transactions of current category."""
         self.create_transactions_batch(10)
         category = self.create_category()
         transactions = self.create_transactions_batch(5, category=category)
-        response = self.client.get(
-            reverse("transaction-category-transactions", args=(category.id,))
+        self._test_list_count(
+            reverse("transaction-category-transactions", args=(category.id,)),
+            len(transactions),
         )
-        self.assertEqual(response.json()["count"], len(transactions))
 
     def test_add_transaction_required_fields(self):
         """
@@ -241,7 +236,7 @@ class CategorizedTransactionViewTests(BaseTestCase):
         )
 
 
-class TransactionFilterTests(BaseTestCase):
+class TransactionFilterTests(BaseViewTestCase):
     def test_transaction_type_filter(self):
         """Response must contain only transactions of provided type."""
         self.create_transactions_batch(
@@ -250,11 +245,10 @@ class TransactionFilterTests(BaseTestCase):
         income_transactions = self.create_transactions_batch(
             5, category=self.create_category(transaction_type=TransactionType.INCOME)
         )
-        response = self.client.get(
-            "{}?category__transaction_type=IN".format(reverse("transaction-list"))
+        self._test_list_count(
+            "{}?category__transaction_type=IN".format(reverse("transaction-list")),
+            len(income_transactions),
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["count"], len(income_transactions))
 
     def test_other_account_category_filter(self):
         """Forbid displaying transactions that belong to another account."""
@@ -277,7 +271,7 @@ class TransactionFilterTests(BaseTestCase):
         selected_category_transactions = self.create_transactions_batch(
             10, category=selected_category
         )
-        response = self.client.get(
-            "{}?category={}".format(reverse("transaction-list"), selected_category.id)
+        self._test_list_count(
+            "{}?category={}".format(reverse("transaction-list"), selected_category.id),
+            len(selected_category_transactions),
         )
-        self.assertEqual(response.json()["count"], len(selected_category_transactions))

@@ -1,4 +1,5 @@
 from django.test import TestCase
+from rest_framework import status
 from rest_framework.test import APIClient
 
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
@@ -39,3 +40,21 @@ class BaseTestCase(TestCase):
         return TransactionFactory.create_batch(
             size, account=account, category=category, **kwargs
         )
+
+
+class BaseViewTestCase(BaseTestCase):
+    def _test_list_count(self, path, count):
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["count"], count)
+
+    def _test_get_unauthorized(self, path):
+        self.__test_unauthorized(lambda: self.client.get(path))
+
+    def _test_post_unauthorized(self, path, data):
+        self.__test_unauthorized(lambda: self.client.post(path, data))
+
+    def __test_unauthorized(self, request_callback):
+        self.client.logout()
+        response = request_callback()
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
