@@ -1,14 +1,13 @@
-from django.test import TestCase
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIRequestFactory, APITestCase
 
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
 
 
-class BaseTestCase(TestCase):
+class BaseTestCase(APITestCase):
     def setUp(self):
+        self.request_factory = APIRequestFactory()
         self.account = AccountFactory()
-        self.client = APIClient()
         self.client.force_login(self.account)
 
     def create_category(self, account=None, parent_category=None, **kwargs):
