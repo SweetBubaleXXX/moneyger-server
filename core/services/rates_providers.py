@@ -26,10 +26,11 @@ class FetchRatesException(BaseException):
 class BaseRates(Generic[T], metaclass=ABCMeta):
     supported_currencies: Iterable[str] = CurrencyCode.values
 
-    def _seconds_to_midnight(self) -> int:
-        now = datetime.utcnow()
-        midnight = datetime.combine(now + timedelta(days=1), time())
-        return (midnight - now).seconds
+    @classmethod
+    def validate_currencies(cls, *args: str) -> None:
+        for currency in args:
+            if currency not in cls.supported_currencies:
+                raise ValueError(f"No rates for {currency}")
 
     def get_data(self) -> T:
         return cache.get_or_set(
@@ -44,9 +45,12 @@ class BaseRates(Generic[T], metaclass=ABCMeta):
 
     @abstractmethod
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
-        for currency in (cur_from, cur_to):
-            if currency not in self.supported_currencies:
-                raise ValueError(f"No rates for {currency}")
+        pass
+
+    def _seconds_to_midnight(self) -> int:
+        now = datetime.utcnow()
+        midnight = datetime.combine(now + timedelta(days=1), time())
+        return (midnight - now).seconds
 
 
 class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
@@ -69,7 +73,7 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
         }
 
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
-        super().get_rate(cur_from, cur_to)
+        self.validate_currencies(cur_from, cur_to)
         if cur_from == cur_to:
             return Decimal(1)
         rates = self.get_data()
