@@ -22,6 +22,10 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         own_categories = self.create_categories_batch(5)
         self._test_list_count(reverse("transaction-category-list"), len(own_categories))
 
+    def test_list_queries_number(self):
+        """Exactly 1 query must be performed."""
+        self._test_get_queries_number(1, reverse("transaction-category-list"))
+
     def test_add_category_unauthorized(self):
         """Try to create category without providing authorization credentials."""
         self._test_post_unauthorized(
@@ -85,6 +89,15 @@ class TransactionCategoryViewTests(BaseViewTestCase):
             reverse("transaction-category-detail", args=(other_account_category.id,))
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_detail_queries_number(self):
+        """Exactly 2 query must be performed."""
+        category = self.create_category()
+        self._test_get_queries_number(
+            1,
+            reverse("transaction-category-detail", args=(category.id,)),
+            category_id=category.id,
+        )
 
     def test_cannot_edit_transaction_type(self):
         """Forbid changing transaction type of existing category."""
