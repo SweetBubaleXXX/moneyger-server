@@ -68,4 +68,7 @@ class MockCurrencyConvertorMixin(TestCase):
         self.converter_mock.convert.side_effect = (
             lambda amount, *_: amount * self.CONVERTION_RATE
         )
-        services_container.currency_converter.override(self.converter_mock)
+        services_container.override(CurrencyConverter, self.converter_mock)
+
+    def tearDown(self):
+        services_container.reset_override()

@@ -1,6 +1,7 @@
 import functools
 import inspect
 from collections.abc import Callable
+from importlib import import_module
 from threading import Lock
 from typing import ParamSpec, TypeVar
 
@@ -17,7 +18,7 @@ class InjectionContainer:
 
     def __getitem__(self, key: type[T]) -> T:
         if not inspect.isclass(key):
-            raise TypeError
+            raise TypeError(f"{key} isn't a valid type")
         with self._lock:
             if key not in self._bindings:
                 raise KeyError(f"No binding found for type {key}")
@@ -40,19 +41,31 @@ class InjectionContainer:
     def inject(self, *params: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
         def decorator(func: Callable[P, T]) -> Callable[P, T]:
             @functools.wraps(func)
-            def inner(*args: P.args, **kwargs: P.kwargs) -> T:
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 for param_name in params:
-                    if param_name not in kwargs:
-                        kwargs[param_name] = self.__getitem__(annotations[param_name])
-                return func(*args, **kwargs)
+                    call_args = inspect.signature(func).bind_partial(*args, **kwargs)
+                    if param_name not in call_args.arguments:
+                        call_args.arguments[param_name] = self.__getitem__(
+                            annotations[param_name]
+                        )
+                return func(*call_args.args, **call_args.kwargs)
 
             annotations = inspect.get_annotations(func)
             for param_name in params:
                 if param_name not in annotations:
-                    raise ValueError(f"No annotation found for parameter {param_name}")
-            return inner
+                    raise TypeError(f"No annotation found for parameter {param_name}")
+
+            return wrapper
 
         return decorator
+
+    def bind(self, key: type, name: str, *args, **kwargs) -> None:
+        module_name, class_name = name.rsplit(".", 1)
+        module = import_module(module_name)
+        factory = getattr(module, class_name)
+        if not issubclass(factory, key):
+            raise TypeError(f"Imported class isn't a subclass of {key}")
+        self.__setitem__(key, factory(*args, **kwargs))
 
     def _validate_binding(self, key, value):
         if not (inspect.isclass(key) and isinstance(value, key)):
