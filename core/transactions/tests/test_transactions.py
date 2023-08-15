@@ -8,10 +8,10 @@ from rest_framework import status
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
 from .base import (
+    BaseViewTestCase,
     IncomeOutcomeCategoriesTestCase,
     MockCurrencyConvertorMixin,
 )
-from .base import BaseViewTestCase
 from .factories import AccountFactory
 
 
