@@ -89,7 +89,7 @@ class TransactionViewMixin:
     permission_classes = (IsOwnAccount,)
 
     def get_queryset(self):
-        return self.request.user.transaction_set.all()
+        return self.request.user.transaction_set.select_related("category").all()
 
 
 class TransactionListView(TransactionViewMixin, generics.ListAPIView):
