@@ -3,40 +3,38 @@ from rest_framework import status
 
 from ...constants import TransactionType
 from ..models import TransactionCategory
-from .base import BaseTestCase
+from .base import BaseViewTestCase
 from .factories import AccountFactory
 
 
-class TransactionCategoryViewTests(BaseTestCase):
+class TransactionCategoryViewTests(BaseViewTestCase):
     def test_list_categories_unauthorized(self):
         """Try to get categories list without providing authorization credentials."""
-        self.client.logout()
-        response = self.client.get(reverse("transaction-category-list"))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self._test_get_unauthorized(reverse("transaction-category-list"))
 
     def test_no_categories(self):
         """Response must be empty if there are on categories."""
-        response = self.client.get(reverse("transaction-category-list"))
-        self.assertEqual(response.json()["count"], 0)
+        self._test_list_count(reverse("transaction-category-list"), 0)
 
     def test_list_categories(self):
         """Response must contain correct amount of items."""
         self.create_categories_batch(10, account=AccountFactory())
         own_categories = self.create_categories_batch(5)
-        response = self.client.get(reverse("transaction-category-list"))
-        self.assertEqual(response.json()["count"], len(own_categories))
+        self._test_list_count(reverse("transaction-category-list"), len(own_categories))
+
+    def test_list_queries_number(self):
+        """Exactly 1 query must be performed."""
+        self._test_get_queries_number(1, reverse("transaction-category-list"))
 
     def test_add_category_unauthorized(self):
         """Try to create category without providing authorization credentials."""
-        self.client.logout()
-        response = self.client.post(
+        self._test_post_unauthorized(
             reverse("transaction-category-list"),
             {
                 "transaction_type": TransactionType.OUTCOME,
                 "name": "Category",
             },
         )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_add_category_required_fields(self):
         """
@@ -77,6 +75,20 @@ class TransactionCategoryViewTests(BaseTestCase):
         response = self.client.post(reverse("transaction-category-list"), request_body)
         self.assertEqual(response.json()["parent_category"], None)
 
+    def test_add_category_queries_number(self):
+        """Exactly 2 queries must be performed.
+
+        One for adding new category, one for historical record.
+        """
+        self._test_post_queries_number(
+            2,
+            reverse("transaction-category-list"),
+            data={
+                "transaction_type": TransactionType.OUTCOME,
+                "name": "Category",
+            },
+        )
+
     def test_category_not_found(self):
         """Response 404 if category doesn't exist."""
         response = self.client.get(
@@ -91,6 +103,15 @@ class TransactionCategoryViewTests(BaseTestCase):
             reverse("transaction-category-detail", args=(other_account_category.id,))
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_detail_queries_number(self):
+        """Exactly 2 query must be performed."""
+        category = self.create_category()
+        self._test_get_queries_number(
+            1,
+            reverse("transaction-category-detail", args=(category.id,)),
+            category_id=category.id,
+        )
 
     def test_cannot_edit_transaction_type(self):
         """Forbid changing transaction type of existing category."""
@@ -142,14 +163,13 @@ class TransactionCategoryViewTests(BaseTestCase):
                 TransactionCategory.objects.get(pk=category.id)
 
 
-class TransactionCategoryFilterTests(BaseTestCase):
+class TransactionCategoryFilterTests(BaseViewTestCase):
     def test_categories_list_filter_not_subcategory(self):
         """Response list must contain only categories without parent category."""
         parent_categories = self.create_categories_batch(5)
         for category in parent_categories:
             self.create_categories_batch(3, parent_category=category)
-        response = self.client.get(
-            "{}?not_subcategory=True".format(reverse("transaction-category-list"))
+        self._test_list_count(
+            "{}?not_subcategory=True".format(reverse("transaction-category-list")),
+            len(parent_categories),
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["count"], len(parent_categories))
