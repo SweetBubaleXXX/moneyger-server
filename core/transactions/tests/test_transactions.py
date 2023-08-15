@@ -298,6 +298,11 @@ class TransactionSummaryViewTests(
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["total"], 0)
 
+    def test_queries_number(self):
+        """Exactly 1 query must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(1, reverse("transaction-summary"))
+
     def test_currency(self):
         """Must use account's default currency."""
         response = self.client.get(reverse("transaction-summary"))

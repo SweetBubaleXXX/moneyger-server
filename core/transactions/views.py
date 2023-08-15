@@ -128,7 +128,9 @@ class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
     filterset_class = TransactionSummaryFilter
 
     def get(self, request, format=None):
-        transactions = self.filter_queryset(self.get_queryset())
+        transactions = self.filter_queryset(
+            self.get_queryset().select_related("category")
+        )
         total = services.compute_total(transactions, request.user.default_currency)
         return Response(
             {
