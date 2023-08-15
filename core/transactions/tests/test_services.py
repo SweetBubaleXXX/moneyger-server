@@ -71,7 +71,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTe
         self.assertEqual(total, Decimal("50") * self.CONVERTION_RATE + Decimal("100"))
 
 
-class GetAllSubategoriesTestCase(BaseTestCase):
+class GetAllSubcategoriesTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.category = self.create_category()

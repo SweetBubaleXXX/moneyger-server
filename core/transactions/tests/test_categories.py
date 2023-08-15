@@ -8,7 +8,7 @@ from .factories import AccountFactory
 
 
 class TransactionCategoryViewTests(BaseTestCase):
-    def test_add_category_unauthorized(self):
+    def test_list_categories_unauthorized(self):
         """Try to get categories list without providing authorization credentials."""
         self.client.logout()
         response = self.client.get(reverse("transaction-category-list"))
