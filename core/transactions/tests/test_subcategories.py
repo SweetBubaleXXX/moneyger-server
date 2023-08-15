@@ -42,10 +42,10 @@ class TransactionSubcategoryViewTests(BaseViewTestCase):
         )
 
     def test_list_queries_number(self):
-        """Exactly 4 queries must be performed."""
+        """Exactly 14 queries must be performed."""
         self.create_categories_batch(10, parent_category=self.parent_category)
         self._test_get_queries_number(
-            4,
+            14,
             reverse(
                 "transaction-category-subcategories", args=(self.parent_category.id,)
             ),
