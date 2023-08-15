@@ -46,4 +46,6 @@ def get_all_subcategories(category: TransactionCategory):
 
 
 def get_all_transactions(category: TransactionCategory):
-    return Transaction.objects.filter(category__in=iter_categories_tree(category.id))
+    return Transaction.objects.filter(
+        category__in=iter_categories_tree(category.id)
+    ).select_related("category")

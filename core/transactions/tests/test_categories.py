@@ -23,8 +23,9 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self._test_list_count(reverse("transaction-category-list"), len(own_categories))
 
     def test_list_queries_number(self):
-        """Exactly 1 query must be performed."""
-        self._test_get_queries_number(1, reverse("transaction-category-list"))
+        """Exactly 2 queries must be performed."""
+        self.create_categories_batch(5)
+        self._test_get_queries_number(2, reverse("transaction-category-list"))
 
     def test_add_category_unauthorized(self):
         """Try to create category without providing authorization credentials."""
