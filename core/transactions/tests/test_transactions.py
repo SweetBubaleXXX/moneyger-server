@@ -38,8 +38,9 @@ class TransactionListViewTests(BaseViewTestCase):
         self._test_list_count(reverse("transaction-list"), len(own_transactions))
 
     def test_list_queries_number(self):
-        """Exactly 1 query must be performed."""
-        self._test_get_queries_number(1, reverse("transaction-list"))
+        """Exactly 2 queries must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(2, reverse("transaction-list"))
 
 
 class TransactionDetailsViewTests(BaseViewTestCase):
@@ -139,10 +140,11 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
         )
 
     def test_list_queries_number(self):
-        """Exactly 2 queries must be performed."""
+        """Exactly 3 queries must be performed."""
         category = self.create_category()
+        self.create_transactions_batch(20, category=category)
         self._test_get_queries_number(
-            2,
+            3,
             reverse("transaction-category-transactions", args=(category.id,)),
             category_id=category.id,
         )
