@@ -30,16 +30,25 @@ class InjectionContainer:
             self._bindings[key] = value
 
     def override(self, key: type[T], value: T) -> None:
+        """Create temporary binding."""
         self._validate_binding(key, value)
         with self._lock:
             self._overridden_bindings[key] = value
 
     def reset_override(self):
+        """Reset all temporary bindings."""
         with self._lock:
             self._overridden_bindings.clear()
 
     def inject(self, *params: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+        """Return decorator that injects provided parameters."""
+
         def decorator(func: Callable[P, T]) -> Callable[P, T]:
+            annotations = inspect.get_annotations(func)
+            for param_name in params:
+                if param_name not in annotations:
+                    raise TypeError(f"No annotation found for parameter {param_name}")
+
             @functools.wraps(func)
             def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
                 for param_name in params:
@@ -50,16 +59,12 @@ class InjectionContainer:
                         )
                 return func(*call_args.args, **call_args.kwargs)
 
-            annotations = inspect.get_annotations(func)
-            for param_name in params:
-                if param_name not in annotations:
-                    raise TypeError(f"No annotation found for parameter {param_name}")
-
             return wrapper
 
         return decorator
 
     def bind(self, key: type, name: str, *args, **kwargs) -> None:
+        """Import class by `name` and create binding `key: Class(*args, **kwargs)`."""
         module_name, class_name = name.rsplit(".", 1)
         module = import_module(module_name)
         factory = getattr(module, class_name)
