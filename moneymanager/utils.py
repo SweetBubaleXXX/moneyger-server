@@ -5,18 +5,18 @@ from importlib import import_module
 from threading import Lock
 from typing import ParamSpec, TypeVar
 
-Bindings = dict[type, object]
-T = TypeVar("T")
-P = ParamSpec("P")
+_Bindings = dict[type, object]
+_T = TypeVar("_T")
+_P = ParamSpec("_P")
 
 
 class InjectionContainer:
     def __init__(self) -> None:
         self._lock = Lock()
-        self._bindings: Bindings = {}
-        self._overridden_bindings: Bindings = {}
+        self._bindings: _Bindings = {}
+        self._overridden_bindings: _Bindings = {}
 
-    def __getitem__(self, key: type[T]) -> T:
+    def __getitem__(self, key: type[_T]) -> _T:
         if not inspect.isclass(key):
             raise TypeError(f"{key} isn't a valid type")
         with self._lock:
@@ -24,12 +24,12 @@ class InjectionContainer:
                 raise KeyError(f"No binding found for type {key}")
             return self._overridden_bindings.get(key) or self._bindings[key]
 
-    def __setitem__(self, key: type[T], value: T) -> None:
+    def __setitem__(self, key: type[_T], value: _T) -> None:
         self._validate_binding(key, value)
         with self._lock:
             self._bindings[key] = value
 
-    def override(self, key: type[T], value: T) -> None:
+    def override(self, key: type[_T], value: _T) -> None:
         """Create temporary binding."""
         self._validate_binding(key, value)
         with self._lock:
@@ -40,17 +40,17 @@ class InjectionContainer:
         with self._lock:
             self._overridden_bindings.clear()
 
-    def inject(self, *params: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    def inject(self, *params: str) -> Callable[[Callable[_P, _T]], Callable[_P, _T]]:
         """Return decorator that injects provided parameters."""
 
-        def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        def decorator(func: Callable[_P, _T]) -> Callable[_P, _T]:
             annotations = inspect.get_annotations(func)
             for param_name in params:
                 if param_name not in annotations:
                     raise TypeError(f"No annotation found for parameter {param_name}")
 
             @functools.wraps(func)
-            def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _T:
                 for param_name in params:
                     call_args = inspect.signature(func).bind_partial(*args, **kwargs)
                     if param_name not in call_args.arguments:
