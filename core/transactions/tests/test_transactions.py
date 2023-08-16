@@ -349,7 +349,7 @@ class TransactionFilterTests(IncomeOutcomeCategoriesTestCase, BaseViewTestCase):
             5, category=self.income_category
         )
         self._test_list_count(
-            "{}?category__transaction_type=IN".format(reverse("transaction-list")),
+            "{}?transaction_type=IN".format(reverse("transaction-list")),
             len(income_transactions),
         )
 

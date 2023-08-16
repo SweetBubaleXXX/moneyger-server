@@ -4,11 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from . import services
-from .filters import (
-    TransactionCategoryFilter,
-    TransactionFilter,
-    TransactionSummaryFilter,
-)
+from .filters import TransactionCategoryFilter, TransactionFilter
 from .permissions import IsOwnAccount
 from .serializers import (
     TransactionCategorySerializer,
@@ -18,10 +14,13 @@ from .serializers import (
 )
 
 
-class TransactionCategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = TransactionCategorySerializer
+class BaseViewMixin:
     permission_classes = (IsOwnAccount,)
     filter_backends = (DjangoFilterBackend,)
+
+
+class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
+    serializer_class = TransactionCategorySerializer
     filterset_class = TransactionCategoryFilter
     lookup_url_kwarg = "category_id"
 
@@ -98,17 +97,16 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class TransactionViewMixin:
+class TransactionViewMixin(BaseViewMixin):
     serializer_class = TransactionSerializer
-    permission_classes = (IsOwnAccount,)
+    filterset_class = TransactionFilter
 
     def get_queryset(self):
         return self.request.user.transaction_set.select_related("category").all()
 
 
 class TransactionListView(TransactionViewMixin, generics.ListAPIView):
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = TransactionFilter
+    pass
 
 
 class TransactionDetailView(
@@ -118,9 +116,6 @@ class TransactionDetailView(
 
 
 class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = TransactionSummaryFilter
-
     def get(self, request):
         transactions = self.filter_queryset(self.get_queryset())
         return services.summary_response(request, transactions)
