@@ -58,10 +58,10 @@ class TransactionSubcategoryViewTests(BaseViewTestCase):
         categories = self.create_categories_batch(10, parent_category=parent_category)
         for subcategory in categories:
             self.create_categories_batch(5, parent_category=subcategory)
-        response = self.client.get(
-            reverse("transaction-category-subcategories", args=(parent_category.id,))
+        self._test_list_count(
+            reverse("transaction-category-subcategories", args=(parent_category.id,)),
+            60,
         )
-        self.assertEqual(response.json()["count"], 60)
 
     def test_add_subcategory_to_other_account(self):
         """Response 404 when trying to add subcategory to other account."""
