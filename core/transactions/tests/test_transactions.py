@@ -97,7 +97,7 @@ class TransactionDetailsViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertListEqual(response.json()["category"], ["Invalid category id."])
 
-    def test_set_category_of_other_account(self):
+    def test_set_category(self):
         """Transaction category must be successfully changed."""
         transaction = self.create_transaction()
         another_category = self.create_category()
