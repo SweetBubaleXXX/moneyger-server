@@ -378,3 +378,14 @@ class TransactionFilterTests(IncomeOutcomeCategoriesTestCase, BaseViewTestCase):
             "{}?category={}".format(reverse("transaction-list"), selected_category.id),
             len(selected_category_transactions),
         )
+
+    def test_transactions_display_order(self):
+        """Recent transactions must be dislplayed first."""
+        recent_transaction_time = timezone.now()
+        self.create_transactions_batch(
+            3, transaction_time=(recent_transaction_time - timedelta(hours=1))
+        )
+        transaction = self.create_transaction(transaction_time=recent_transaction_time)
+        response = self.client.get(reverse("transaction-list"))
+        first_transaction = response.json()["results"][0]
+        self.assertEqual(first_transaction["id"], transaction.id)
