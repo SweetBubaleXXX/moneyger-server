@@ -2,12 +2,23 @@ from collections.abc import Iterable
 from decimal import Decimal
 
 from dependency_injector.wiring import Provide, inject
+from rest_framework.response import Response
 
 from moneymanager.containers import Services
 
 from ..constants import CurrencyCode, TransactionType
 from ..services.currency import CurrencyConverter
 from .models import Transaction, TransactionCategory
+
+
+def summary_response(request, transactions):
+    total = compute_total(transactions, request.user.default_currency)
+    return Response(
+        {
+            "total": total,
+            "currency": request.user.default_currency,
+        }
+    )
 
 
 @inject

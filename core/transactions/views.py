@@ -87,13 +87,7 @@ class TransactionCategoryViewSet(viewsets.ModelViewSet):
         transactions = TransactionFilter(
             request.query_params, services.get_all_transactions(self.get_object())
         ).qs
-        total = services.compute_total(transactions, request.user.default_currency)
-        return Response(
-            {
-                "total": total,
-                "currency": request.user.default_currency,
-            }
-        )
+        return services.summary_response(request, transactions)
 
     def _paginated_response(self, queryset):
         page = self.paginate_queryset(queryset)
@@ -127,12 +121,6 @@ class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TransactionSummaryFilter
 
-    def get(self, request, format=None):
+    def get(self, request):
         transactions = self.filter_queryset(self.get_queryset())
-        total = services.compute_total(transactions, request.user.default_currency)
-        return Response(
-            {
-                "total": total,
-                "currency": request.user.default_currency,
-            }
-        )
+        return services.summary_response(request, transactions)
