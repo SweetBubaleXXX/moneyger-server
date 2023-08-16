@@ -3,6 +3,7 @@ Django==4.2.3
 django-colorfield==0.9.0
 django-environ==0.10.0
 django-filter==23.2
+django-rest-knox==4.2.0
 django-simple-history==3.3.0
 djangorestframework==3.14.0
 factory-boy==3.3.0
