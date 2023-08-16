@@ -43,7 +43,7 @@ class TransactionListViewTests(BaseViewTestCase):
         self._test_list_count(reverse("transaction-list"), len(own_transactions))
 
     def test_list_queries_number(self):
-        """Exactly 2 queries must be performed."""
+        """Correct number of queries must be performed."""
         self.create_transactions_batch(5)
         self._test_get_queries_number(2, reverse("transaction-list"))
 
@@ -147,7 +147,7 @@ class CategorizedTransactionViewTests(
         )
 
     def test_list_queries_number(self):
-        """Exactly 9 queries must be performed."""
+        """Correct number of queries must be performed."""
         for subcategory in self.create_categories_batch(
             5, parent_category=self.income_category
         ):
@@ -277,7 +277,7 @@ class CategorizedTransactionViewTests(
         )
 
     def test_add_transaction_queries_number(self):
-        """Exactly 3 queries must be performed."""
+        """Correct number of queries must be performed."""
         category = self.create_category()
         self._test_post_queries_number(
             3,
@@ -303,7 +303,7 @@ class TransactionSummaryViewTests(
         self._test_total_value(reverse("transaction-summary"), 0)
 
     def test_queries_number(self):
-        """Exactly 1 query must be performed."""
+        """Correct number of queries must be performed."""
         self.create_transactions_batch(5)
         self._test_get_queries_number(1, reverse("transaction-summary"))
 

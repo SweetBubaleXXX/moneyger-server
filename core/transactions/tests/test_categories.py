@@ -28,7 +28,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self._test_list_count(reverse("transaction-category-list"), len(own_categories))
 
     def test_list_queries_number(self):
-        """Exactly 2 queries must be performed."""
+        """Correct number of queries must be performed."""
         self.create_categories_batch(5)
         self._test_get_queries_number(2, reverse("transaction-category-list"))
 
@@ -82,7 +82,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self.assertEqual(response.json()["parent_category"], None)
 
     def test_add_category_queries_number(self):
-        """Exactly 2 queries must be performed.
+        """Correct number of queries must be performed.
 
         One for adding new category, one for historical record.
         """
@@ -111,7 +111,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_detail_queries_number(self):
-        """Exactly 2 query must be performed."""
+        """Correct number of queries must be performed."""
         category = self.create_category()
         self._test_get_queries_number(
             1,
@@ -213,7 +213,7 @@ class TransactionCategorySummaryViewTests(
         )
 
     def test_queries_number(self):
-        """Exactly 8 queries must be performed."""
+        """Correct number of queries must be performed."""
         subcategories = self.create_categories_batch(
             5, parent_category=self.outcome_category
         )
