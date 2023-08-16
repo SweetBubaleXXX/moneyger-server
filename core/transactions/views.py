@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets, filters
+from rest_framework import filters, generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -49,7 +49,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     )
     def subcategories(self, request, category_id=None):
         subcategories = services.get_all_subcategories(self.get_object())
-        return self._paginated_response(subcategories)
+        return self._paginated_response(subcategories.order_by("-display_order"))
 
     @subcategories.mapping.post
     def add_subcategory(self, request, category_id=None):
@@ -72,7 +72,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     )
     def transactions(self, request, category_id=None):
         transactions = services.get_all_transactions(self.get_object())
-        return self._paginated_response(transactions)
+        return self._paginated_response(transactions.order_by("-transaction_time"))
 
     @transactions.mapping.post
     def add_transaction(self, request, category_id=None):
