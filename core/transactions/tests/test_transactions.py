@@ -1,5 +1,4 @@
 from datetime import timedelta
-from urllib.parse import quote
 
 from django.urls import reverse
 from django.utils import timezone
@@ -8,6 +7,7 @@ from rest_framework import status
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
 from .base import (
+    BaseSummaryViewTestCase,
     BaseViewTestCase,
     IncomeOutcomeCategoriesTestCase,
     MockCurrencyConvertorMixin,
@@ -292,7 +292,7 @@ class CategorizedTransactionViewTests(
 
 
 class TransactionSummaryViewTests(
-    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseViewTestCase
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseSummaryViewTestCase
 ):
     def test_unauthorized(self):
         """Try to get summary without providing authorization credentials."""
@@ -300,9 +300,7 @@ class TransactionSummaryViewTests(
 
     def test_no_transactions(self):
         """Total value in response must be 0 if there are no transactions."""
-        response = self.client.get(reverse("transaction-summary"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["total"], 0)
+        self._test_total_value(reverse("transaction-summary"), 0)
 
     def test_queries_number(self):
         """Exactly 1 query must be performed."""
@@ -311,48 +309,36 @@ class TransactionSummaryViewTests(
 
     def test_currency(self):
         """Must use account's default currency."""
-        response = self.client.get(reverse("transaction-summary"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["currency"], self.account.default_currency)
+        self._test_currency(reverse("transaction-summary"))
 
     def test_filter_outcome(self):
         """Total value must be negative."""
         self.create_transactions_batch(10, category=self.income_category, amount=100)
         self.create_transactions_batch(5, category=self.outcome_category, amount=100)
-        response = self.client.get(
+        self._test_negative_total(
             "{}?transaction_type={}".format(
                 reverse("transaction-summary"), TransactionType.OUTCOME
             )
         )
-        self.assertGreater(0, response.json()["total"])
 
     def test_filter_income(self):
         """Total value must be positive."""
         self.create_transactions_batch(5, category=self.income_category, amount=100)
         self.create_transactions_batch(10, category=self.outcome_category, amount=100)
-        response = self.client.get(
+        self._test_positive_total(
             "{}?transaction_type={}".format(
                 reverse("transaction-summary"), TransactionType.INCOME
             )
         )
-        self.assertGreater(response.json()["total"], 0)
 
     def test_filter_time(self):
         """Mustn't summarize transactions that don't match the filter."""
-        old_transactions_time = timezone.now() - timedelta(days=10)
-        self.create_transactions_batch(
-            50,
-            category=self.income_category,
-            amount=5,
-            transaction_time=old_transactions_time,
-        )
-        response = self.client.get(
-            "{}?transaction_time_after={}".format(
-                reverse("transaction-summary"),
-                quote((old_transactions_time + timedelta(seconds=1)).isoformat()),
+        with self._test_filter_time(reverse("transaction-summary")) as transaction_time:
+            self.create_transactions_batch(
+                50,
+                category=self.income_category,
+                transaction_time=transaction_time,
             )
-        )
-        self.assertEqual(0, response.json()["total"])
 
 
 class TransactionFilterTests(IncomeOutcomeCategoriesTestCase, BaseViewTestCase):
