@@ -33,6 +33,8 @@ class BaseTestCase(APITestCase):
     def create_categories_batch(
         self, size, account=None, parent_category=None, **kwargs
     ):
+        if parent_category:
+            kwargs["transaction_type"] = parent_category.transaction_type
         return TransactionCategoryFactory.create_batch(
             size,
             account=account or self.account,
