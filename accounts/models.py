@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from core.constants import CurrencyCode, SESSION_TTL_CHOICES
+from core.constants import SESSION_TTL_CHOICES, CurrencyCode
 
 
 class Account(AbstractUser):
