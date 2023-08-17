@@ -1,6 +1,6 @@
 from knox.views import LoginView as KnoxLoginView
-from rest_framework.authentication import BaseAuthentication
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 
 
 class LoginView(KnoxLoginView):
-    authentication_classes = (BaseAuthentication,)
+    authentication_classes = (BasicAuthentication, SessionAuthentication)
