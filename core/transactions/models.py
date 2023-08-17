@@ -1,10 +1,12 @@
 from colorfield.fields import ColorField
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-from ..constants import CurrencyChoices, TransactionType
+from ..constants import CurrencyCode, TransactionType
+from ..services import currency
 
 
 class BaseModel(models.Model):
@@ -33,7 +35,7 @@ class TransactionCategory(BaseModel):
 
     parent_category = models.ForeignKey(
         "self",
-        related_name="child_categories",
+        related_name="subcategories",
         null=True,
         blank=True,
         on_delete=models.CASCADE,
@@ -51,7 +53,17 @@ class Transaction(BaseModel):
         on_delete=models.CASCADE,
         related_name="transactions",
     )
-    amount = models.BigIntegerField()
-    currency = models.CharField(max_length=3, choices=CurrencyChoices.choices)
+    amount = models.BigIntegerField(validators=(MinValueValidator(1),))
+    currency = models.CharField(max_length=3, choices=CurrencyCode.choices)
     comment = models.CharField(max_length=255, blank=True)
-    transaction_time = models.DateTimeField(default=timezone.now)
+    transaction_time = models.DateTimeField(
+        default=timezone.now, validators=(MaxValueValidator(timezone.now),)
+    )
+
+    @property
+    def amount_decimal(self):
+        return currency.int_to_decimal(self.amount, self.currency)
+
+    @amount_decimal.setter
+    def amount_decimal(self, value):
+        self.amount = currency.decimal_to_int(value, self.currency)

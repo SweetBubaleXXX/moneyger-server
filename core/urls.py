@@ -1,5 +1,5 @@
-from django.urls import path
+from .transactions import urls as transaction_urls
 
-from . import views
-
-urlpatterns = []
+urlpatterns = [
+    *transaction_urls.urlpatterns,
+]
