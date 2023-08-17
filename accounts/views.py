@@ -4,3 +4,6 @@ from rest_framework.authentication import BasicAuthentication, SessionAuthentica
 
 class LoginView(KnoxLoginView):
     authentication_classes = (BasicAuthentication, SessionAuthentication)
+
+    def get_token_ttl(self):
+        return self.request.user.session_ttl
