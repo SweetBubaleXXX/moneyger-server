@@ -6,7 +6,7 @@ from typing import TypeVar
 from django.http import StreamingHttpResponse
 
 from ..transactions.models import Transaction
-from .serializers import TransacationExportSerializer
+from .serializers import TransacationCsvSerializer
 
 T = TypeVar("T")
 
@@ -28,7 +28,7 @@ def csv_generator(transactions: Iterable[Transaction]):
     writer = csv.DictWriter(_EchoBuffer(), fieldnames)
     yield writer.writeheader()
     for entry in transactions:
-        row = TransacationExportSerializer(entry).data
+        row = TransacationCsvSerializer(entry).data
         yield writer.writerow(row)
 
 
