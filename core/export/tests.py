@@ -1,5 +1,3 @@
-import re
-
 from ..constants import CurrencyCode, TransactionType
 from ..transactions.tests.base import BaseTestCase
 from .services import csv_generator
