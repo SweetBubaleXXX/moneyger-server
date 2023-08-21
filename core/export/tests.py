@@ -1,6 +1,8 @@
+import json
+
 from ..constants import CurrencyCode, TransactionType
 from ..transactions.tests.base import BaseTestCase
-from .services import csv_generator
+from .services import csv_generator, json_response
 
 
 class ExportCsvTestCase(BaseTestCase):
@@ -34,3 +36,26 @@ class ExportCsvTestCase(BaseTestCase):
 
     def _get_csv_output(self, transactions):
         return "".join(csv_generator(transactions))
+
+
+class ExportJsonTestCase(BaseTestCase):
+    def test_no_categories(self):
+        """Must return empty list if there are no categories."""
+        response = json_response()
+        self.assertJSONEqual(response.data, [])
+
+    def test_nested_categories(self):
+        """All subcategories and transactions must be present."""
+        categories = self.create_categories_batch(5)
+        for category in categories:
+            for subcategory in self.create_categories_batch(
+                3, parent_category=category
+            ):
+                self.create_transactions_batch(10, category=subcategory)
+        response = json.loads(json_response().data)
+        self.assertEqual(len(response), len(categories))
+        for category in response:
+            self.assertEqual(len(category["subcategories"]), 3)
+            self.assertListEqual(category["transactions"], [])
+            for subcategory in category["subcategories"]:
+                self.assertEqual(len(subcategory["transactions"]), 10)

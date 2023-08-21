@@ -51,4 +51,6 @@ class CategoryJsonSerializer(serializers.ModelSerializer):
             "display_order",
             "icon",
             "color",
+            "subcategories",
+            "transactions",
         )
