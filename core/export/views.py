@@ -1,0 +1,23 @@
+from rest_framework.generics import GenericAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ..transactions.views import BaseViewMixin
+from .serializers import CategoryJsonSerializer
+
+
+class ExportJsonView(BaseViewMixin, GenericAPIView):
+    serializer_class = CategoryJsonSerializer
+
+    def get_queryset(self):
+        return self.request.user.transactioncategory_set.filter(
+            parent_category__isnull=True
+        )
+
+    def get(self, request):
+        serializer = self.get_serializer(many=True)
+        return Response(
+            serializer.data,
+            content_type="application/json",
+            headers={"Content-Disposition": 'attachment; filename="Moneyger.json"'},
+        )

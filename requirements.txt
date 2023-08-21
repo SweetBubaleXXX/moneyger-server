@@ -9,6 +9,5 @@ djangorestframework==3.14.0
 drf-spectacular[sidecar]==0.26.4
 factory-boy==3.3.0
 iso4217==1.11.20220401
-json-stream==2.3.2
 psycopg2==2.9.6
 requests==2.31.0

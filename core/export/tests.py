@@ -1,8 +1,10 @@
 import json
 
+from django.urls import reverse
+
 from ..constants import CurrencyCode, TransactionType
-from ..transactions.tests.base import BaseTestCase
-from .services import csv_generator, json_response
+from ..transactions.tests.base import BaseTestCase, BaseViewTestCase
+from .services import csv_generator
 
 
 class ExportCsvTestCase(BaseTestCase):
@@ -38,11 +40,11 @@ class ExportCsvTestCase(BaseTestCase):
         return "".join(csv_generator(transactions))
 
 
-class ExportJsonTestCase(BaseTestCase):
+class ExportJsonTestCase(BaseViewTestCase):
     def test_no_categories(self):
         """Must return empty list if there are no categories."""
-        response = json_response()
-        self.assertJSONEqual(response.data, [])
+        response = self.client.get(reverse("export-json"))
+        self.assertListEqual(response.json(), [])
 
     def test_nested_categories(self):
         """All subcategories and transactions must be present."""
@@ -52,7 +54,7 @@ class ExportJsonTestCase(BaseTestCase):
                 3, parent_category=category
             ):
                 self.create_transactions_batch(10, category=subcategory)
-        response = json.loads(json_response().data)
+        response = self.client.get(reverse("export-json")).json()
         self.assertEqual(len(response), len(categories))
         for category in response:
             self.assertEqual(len(category["subcategories"]), 3)

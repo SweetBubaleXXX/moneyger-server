@@ -1,5 +1,6 @@
-from .transactions import urls as transaction_urls
+from django.urls import include, path
 
 urlpatterns = [
-    *transaction_urls.urlpatterns,
+    path("", include("core.transactions.urls")),
+    path("", include("core.export.urls")),
 ]
