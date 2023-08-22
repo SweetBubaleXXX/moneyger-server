@@ -77,4 +77,4 @@ class ExportJsonViewTests(BaseViewTestCase):
         """Correct number of queries must be performed."""
         for category in self.create_categories_batch(5):
             self.create_categories_batch(3, parent_category=category)
-        self._test_get_queries_number(41, reverse("export-json"))
+        self._test_get_queries_number(33, reverse("export-json"))

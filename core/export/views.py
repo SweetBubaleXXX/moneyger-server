@@ -15,7 +15,12 @@ class ExportJsonView(BaseViewMixin, GenericAPIView):
         )
 
     def get(self, request):
-        serializer = self.get_serializer(instance=self.get_queryset(), many=True)
+        serializer = self.get_serializer(
+            instance=self.get_queryset().prefetch_related(
+                "subcategories", "transactions"
+            ),
+            many=True,
+        )
         return Response(
             serializer.data,
             content_type="application/json",
