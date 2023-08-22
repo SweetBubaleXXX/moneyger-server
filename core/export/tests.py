@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from ..constants import CurrencyCode, TransactionType
 from ..transactions.tests.base import BaseTestCase, BaseViewTestCase
+from ..transactions.tests.factories import AccountFactory
 from .services import csv_generator
 
 
@@ -40,7 +41,17 @@ class ExportCsvTestCase(BaseTestCase):
         return "".join(csv_generator(transactions))
 
 
-class ExportJsonTestCase(BaseViewTestCase):
+class ExportJsonViewTests(BaseViewTestCase):
+    def test_unauthorized(self):
+        """Try to get data without providing authorization credentials."""
+        self._test_get_unauthorized(reverse("export-json"))
+
+    def test_view_data_of_other_account(self):
+        """Categories that belong to another account mustn't be present."""
+        self.create_categories_batch(10, account=AccountFactory())
+        response = self.client.get(reverse("export-json"))
+        self.assertListEqual(response.json(), [])
+
     def test_no_categories(self):
         """Must return empty list if there are no categories."""
         response = self.client.get(reverse("export-json"))
@@ -61,3 +72,9 @@ class ExportJsonTestCase(BaseViewTestCase):
             self.assertListEqual(category["transactions"], [])
             for subcategory in category["subcategories"]:
                 self.assertEqual(len(subcategory["transactions"]), 10)
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        for category in self.create_categories_batch(5):
+            self.create_categories_batch(3, parent_category=category)
+        self._test_get_queries_number(41, reverse("export-json"))
