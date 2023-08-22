@@ -12,17 +12,8 @@ class ExportJsonView(BaseViewMixin, GenericAPIView):
     def get_queryset(self):
         return self.request.user.transactioncategory_set.filter(
             parent_category__isnull=True
-        )
+        ).prefetch_related("subcategories", "transactions")
 
     def get(self, request):
-        serializer = self.get_serializer(
-            instance=self.get_queryset().prefetch_related(
-                "subcategories", "transactions"
-            ),
-            many=True,
-        )
-        return Response(
-            serializer.data,
-            content_type="application/json",
-            headers={"Content-Disposition": 'attachment; filename="Moneyger.json"'},
-        )
+        serializer = self.get_serializer(instance=self.get_queryset(), many=True)
+        return Response(serializer.data)
