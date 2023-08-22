@@ -1,3 +1,7 @@
+from datetime import timedelta
+from urllib.parse import quote
+
+from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
 
@@ -45,6 +49,19 @@ class ExportCsvViewTests(BaseViewTestCase):
         self.create_transactions_batch(20)
         with self.assertNumQueries(2):
             self._get_csv_response()
+
+    def test_filter(self):
+        """Mustn't export transactions that don't match the filter."""
+        transaction_time = timezone.now() - timedelta(days=10)
+        boundary_time = transaction_time + timedelta(seconds=1)
+        self.create_transactions_batch(20, transaction_time=transaction_time)
+        response = self.client.get(
+            "{}?transaction_time_after={}".format(
+                reverse("export-csv"),
+                quote(boundary_time.isoformat()),
+            )
+        )
+        self.assertEqual(len(list(response.streaming_content)), 1)
 
     def _test_header(self, header):
         self.assertEqual(

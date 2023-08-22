@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import ExportJsonView, ExportCsvView
+from .views import ExportCsvView, ExportJsonView
 
 urlpatterns = [
     path("export/csv/", ExportCsvView.as_view(), name="export-csv"),

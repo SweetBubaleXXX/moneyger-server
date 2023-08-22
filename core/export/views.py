@@ -1,17 +1,20 @@
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
+from ..transactions.filters import TransactionFilter
 from ..transactions.views import BaseViewMixin
 from .serializers import CategoryJsonSerializer
 from .services import csv_response
 
 
-class ExportCsvView(BaseViewMixin, APIView):
+class ExportCsvView(BaseViewMixin, GenericAPIView):
+    filterset_class = TransactionFilter
+
+    def get_queryset(self):
+        return self.request.user.transaction_set.all().select_related("category")
+
     def get(self, request):
-        return csv_response(
-            request.user.transaction_set.all().select_related("category")
-        )
+        return csv_response(self.filter_queryset(self.get_queryset()))
 
 
 class ExportJsonView(BaseViewMixin, GenericAPIView):
