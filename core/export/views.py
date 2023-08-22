@@ -4,6 +4,14 @@ from rest_framework.views import APIView
 
 from ..transactions.views import BaseViewMixin
 from .serializers import CategoryJsonSerializer
+from .services import csv_response
+
+
+class ExportCsvView(BaseViewMixin, APIView):
+    def get(self, request):
+        return csv_response(
+            request.user.transaction_set.all().select_related("category")
+        )
 
 
 class ExportJsonView(BaseViewMixin, GenericAPIView):

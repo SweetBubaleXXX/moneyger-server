@@ -1,18 +1,20 @@
-import json
-
 from django.urls import reverse
+from rest_framework import status
 
 from ..constants import CurrencyCode, TransactionType
-from ..transactions.tests.base import BaseTestCase, BaseViewTestCase
+from ..transactions.tests.base import BaseViewTestCase
 from ..transactions.tests.factories import AccountFactory
-from .services import csv_generator
 
 
-class ExportCsvTestCase(BaseTestCase):
+class ExportCsvViewTests(BaseViewTestCase):
+    def test_unauthorized(self):
+        """Try to get data without providing authorization credentials."""
+        self._test_get_unauthorized(reverse("export-csv"))
+
     def test_no_transactions(self):
         """Test export when there are no transactions."""
-        csv_output = self._get_csv_output([])
-        self._test_header(csv_output)
+
+        self._test_header(self._get_csv_response())
 
     def test_export(self):
         """Test export transactions."""
@@ -22,14 +24,27 @@ class ExportCsvTestCase(BaseTestCase):
         transactions = self.create_transactions_batch(
             10, category=category, currency=CurrencyCode.USD
         )
-        csv_output = csv_generator(transactions)
-        self._test_header(next(csv_output))
-        rows = list(csv_output)
+        response_iterator = self._iter_csv_response()
+        self._test_header(next(response_iterator))
+        rows = list(response_iterator)
         self.assertEqual(len(rows), len(transactions))
         for row in rows:
             self.assertRegex(
                 row, r"^Expenses category,OUT,USD,[0-9]+(\.[0-9]+)?,.*\r\n$"
             )
+
+    def test_view_data_of_other_account(self):
+        """Transactions that belong to another account mustn't be present."""
+        self.create_transactions_batch(5, account=AccountFactory())
+        own_transactions = self.create_transactions_batch(10)
+        response = list(self._iter_csv_response())
+        self.assertEqual(len(response), len(own_transactions) + 1)
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        self.create_transactions_batch(20)
+        with self.assertNumQueries(2):
+            self._get_csv_response()
 
     def _test_header(self, header):
         self.assertEqual(
@@ -37,8 +52,15 @@ class ExportCsvTestCase(BaseTestCase):
             "category,transaction_type,currency,amount,transaction_time,comment\r\n",
         )
 
-    def _get_csv_output(self, transactions):
-        return "".join(csv_generator(transactions))
+    def _get_csv_response(self):
+        return "".join(self._iter_csv_response())
+
+    def _iter_csv_response(self):
+        response = self.client.get(reverse("export-csv"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.headers["Content-Type"], "text/csv")
+        for line in response.streaming_content:
+            yield line.decode()
 
 
 class ExportJsonViewTests(BaseViewTestCase):
