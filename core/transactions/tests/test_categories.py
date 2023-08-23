@@ -3,14 +3,12 @@ from rest_framework import status
 
 from ...constants import TransactionType
 from ..models import TransactionCategory
-
 from .base import (
     BaseSummaryViewTestCase,
     BaseViewTestCase,
     IncomeOutcomeCategoriesTestCase,
     MockCurrencyConvertorMixin,
 )
-
 from .factories import AccountFactory
 
 
