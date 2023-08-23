@@ -3,7 +3,12 @@ from rest_framework import status
 
 from ...constants import TransactionType
 from ..models import TransactionCategory
-from .base import BaseViewTestCase
+from .base import (
+    BaseSummaryViewTestCase,
+    BaseViewTestCase,
+    IncomeOutcomeCategoriesTestCase,
+    MockCurrencyConvertorMixin,
+)
 from .factories import AccountFactory
 
 
@@ -23,7 +28,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self._test_list_count(reverse("transaction-category-list"), len(own_categories))
 
     def test_list_queries_number(self):
-        """Exactly 2 queries must be performed."""
+        """Correct number of queries must be performed."""
         self.create_categories_batch(5)
         self._test_get_queries_number(2, reverse("transaction-category-list"))
 
@@ -77,7 +82,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self.assertEqual(response.json()["parent_category"], None)
 
     def test_add_category_queries_number(self):
-        """Exactly 2 queries must be performed.
+        """Correct number of queries must be performed.
 
         One for adding new category, one for historical record.
         """
@@ -106,7 +111,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_detail_queries_number(self):
-        """Exactly 2 query must be performed."""
+        """Correct number of queries must be performed."""
         category = self.create_category()
         self._test_get_queries_number(
             1,
@@ -162,6 +167,74 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         for category in subcategories:
             with self.assertRaises(TransactionCategory.DoesNotExist):
                 TransactionCategory.objects.get(pk=category.id)
+
+
+class TransactionCategorySummaryViewTests(
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseSummaryViewTestCase
+):
+    def test_unauthorized(self):
+        """Try to get summary without providing authorization credentials."""
+        self._test_get_unauthorized(
+            reverse("transaction-category-summary", args=(self.income_category.id,))
+        )
+
+    def test_no_transactions(self):
+        """Total value in response must be 0 if there are no transactions."""
+        self._test_total_value(
+            reverse("transaction-category-summary", args=(self.income_category.id,)), 0
+        )
+
+    def test_income_total_value(self):
+        """Total value must be positive."""
+        self.create_transactions_batch(10, category=self.income_category)
+        self._test_positive_total(
+            reverse("transaction-category-summary", args=(self.income_category.id,))
+        )
+
+    def test_outcome_total_value(self):
+        """Total value must be negative."""
+        self.create_transactions_batch(10, category=self.outcome_category)
+        self._test_negative_total(
+            reverse("transaction-category-summary", args=(self.outcome_category.id,))
+        )
+
+    def test_include_subcategories(self):
+        """Transactions of subcategories must be computed too."""
+        subcategories = self.create_categories_batch(
+            5, parent_category=self.outcome_category
+        )
+        for category in subcategories:
+            self.create_transactions_batch(
+                15, category=category, amount=1, currency=self.account.default_currency
+            )
+        self._test_total_value(
+            reverse("transaction-category-summary", args=(self.outcome_category.id,)),
+            -0.75,
+        )
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        subcategories = self.create_categories_batch(
+            5, parent_category=self.outcome_category
+        )
+        for category in subcategories:
+            self.create_transactions_batch(15, category=category)
+        self._test_get_queries_number(
+            8,
+            reverse("transaction-category-summary", args=(self.outcome_category.id,)),
+            category_id=self.outcome_category.id,
+        )
+
+    def test_filter_time(self):
+        """Mustn't summarize transactions that don't match the filter."""
+        with self._test_filter_time(
+            reverse("transaction-category-summary", args=(self.income_category.id,))
+        ) as transaction_time:
+            self.create_transactions_batch(
+                20,
+                category=self.income_category,
+                transaction_time=transaction_time,
+            )
 
 
 class TransactionCategoryFilterTests(BaseViewTestCase):

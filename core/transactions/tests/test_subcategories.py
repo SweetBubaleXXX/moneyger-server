@@ -42,14 +42,25 @@ class TransactionSubcategoryViewTests(BaseViewTestCase):
         )
 
     def test_list_queries_number(self):
-        """Exactly 3 queries must be performed."""
+        """Correct number of queries must be performed."""
         self.create_categories_batch(10, parent_category=self.parent_category)
         self._test_get_queries_number(
-            3,
+            14,
             reverse(
                 "transaction-category-subcategories", args=(self.parent_category.id,)
             ),
             category_id=self.parent_category.id,
+        )
+
+    def test_list_subcategories_recursive(self):
+        """Response must contain subcategories of subcategories."""
+        parent_category = self.create_category()
+        categories = self.create_categories_batch(10, parent_category=parent_category)
+        for subcategory in categories:
+            self.create_categories_batch(5, parent_category=subcategory)
+        self._test_list_count(
+            reverse("transaction-category-subcategories", args=(parent_category.id,)),
+            60,
         )
 
     def test_add_subcategory_to_other_account(self):
@@ -91,7 +102,7 @@ class TransactionSubcategoryViewTests(BaseViewTestCase):
         )
 
     def test_add_subcategory_queries_number(self):
-        """Exactly 3 queries must be performed."""
+        """Correct number of queries must be performed."""
         self._test_post_queries_number(
             3,
             reverse(

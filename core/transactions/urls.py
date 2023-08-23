@@ -18,4 +18,9 @@ urlpatterns = [
         views.TransactionDetailView.as_view(),
         name="transaction-detail",
     ),
+    path(
+        "transactions/summary/",
+        views.TransactionSummaryView.as_view(),
+        name="transaction-summary",
+    ),
 ]

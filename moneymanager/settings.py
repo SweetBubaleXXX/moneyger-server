@@ -158,6 +158,11 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 100,
 }
 
+CURRENCY_RATES_PROVIDER = env(
+    "CURRENCY_RATES_PROVIDER",
+    default="core.services.rates_providers.AlfaBankNationalRates",
+)
+
 ALFA_BANK_NATIONAL_RATES_URL = env(
     "ALFA_BANK_NATIONAL_RATES_URL",
     default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",

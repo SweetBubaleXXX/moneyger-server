@@ -11,7 +11,7 @@ class AccountFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = "accounts.Account"
 
-    username = factory.Faker("first_name")
+    username = factory.Sequence(lambda n: f"User {n}")
     password = factory.django.Password(DEFAULT_ACCOUNT_PASSWORD)
 
 
@@ -22,10 +22,10 @@ class TransactionCategoryFactory(factory.django.DjangoModelFactory):
     account = factory.SubFactory(AccountFactory)
     transaction_type = factory.Iterator(TransactionType)
     parent_category = factory.SubFactory(
-        "core.transactions.factories.TransactionCategoryFactory",
+        "core.transactions.tests.factories.TransactionCategoryFactory",
         transaction_type=factory.SelfAttribute("..transaction_type"),
     )
-    name = factory.sequence(lambda n: "Category %d" % n)
+    name = factory.Sequence(lambda n: f"Category {n}")
     color = factory.Faker("color")
 
 

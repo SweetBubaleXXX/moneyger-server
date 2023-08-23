@@ -1,11 +1,18 @@
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from django.test import TestCase
+from iso4217 import Currency
 
 from ...constants import CurrencyCode
 from ..currency import CurrencyConverter
 from ..rates_providers import BaseRates
+
+
+def test_currency_metadata():
+    """No exception must be raised when getting currency info."""
+    for currency in CurrencyCode:
+        Currency(currency)
 
 
 class CurrencyConverterTestCase(TestCase):

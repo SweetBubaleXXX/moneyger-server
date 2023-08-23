@@ -1,7 +1,19 @@
+from contextlib import contextmanager
+from datetime import timedelta
+from decimal import Decimal
+from unittest.mock import MagicMock
+from urllib.parse import quote
+
+from django.test import TestCase
 from django.urls import resolve
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 
+from moneymanager import services_container
+
+from ...constants import TransactionType
+from ..services import CurrencyConverter
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
 
 
@@ -25,6 +37,8 @@ class BaseTestCase(APITestCase):
     def create_categories_batch(
         self, size, account=None, parent_category=None, **kwargs
     ):
+        if parent_category:
+            kwargs["transaction_type"] = parent_category.transaction_type
         return TransactionCategoryFactory.create_batch(
             size,
             account=account or self.account,
@@ -37,6 +51,17 @@ class BaseTestCase(APITestCase):
         category = category or self.create_category(account=account)
         return TransactionFactory.create_batch(
             size, account=account, category=category, **kwargs
+        )
+
+
+class IncomeOutcomeCategoriesTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.income_category = self.create_category(
+            transaction_type=TransactionType.INCOME
+        )
+        self.outcome_category = self.create_category(
+            transaction_type=TransactionType.OUTCOME
         )
 
 
@@ -76,3 +101,53 @@ class BaseViewTestCase(BaseTestCase):
         self.client.logout()
         response = request_callback()
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class BaseSummaryViewTestCase(BaseViewTestCase):
+    def _test_total_value(self, path, value):
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["total"], value)
+
+    def _test_positive_total(self, path):
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(response.json()["total"], 0)
+
+    def _test_negative_total(self, path):
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreater(0, response.json()["total"])
+
+    def _test_currency(self, path):
+        response = self.client.get(path)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["currency"], self.account.default_currency)
+
+    @contextmanager
+    def _test_filter_time(self, path):
+        transaction_time = timezone.now() - timedelta(days=10)
+        yield transaction_time
+        boundary_time = transaction_time + timedelta(seconds=1)
+        self._test_total_value(
+            "{}?transaction_time_after={}".format(
+                path,
+                quote(boundary_time.isoformat()),
+            ),
+            0,
+        )
+
+
+class MockCurrencyConvertorMixin(TestCase):
+    CONVERTION_RATE = Decimal(2)
+
+    def setUp(self):
+        super().setUp()
+        self.converter_mock = MagicMock(CurrencyConverter)
+        self.converter_mock.convert.side_effect = (
+            lambda amount, *_: amount * self.CONVERTION_RATE
+        )
+        services_container.override(CurrencyConverter, self.converter_mock)
+
+    def tearDown(self):
+        services_container.reset_override()

@@ -6,7 +6,12 @@ from rest_framework import status
 
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
-from .base import BaseViewTestCase
+from .base import (
+    BaseSummaryViewTestCase,
+    BaseViewTestCase,
+    IncomeOutcomeCategoriesTestCase,
+    MockCurrencyConvertorMixin,
+)
 from .factories import AccountFactory
 
 
@@ -36,6 +41,11 @@ class TransactionListViewTests(BaseViewTestCase):
         self.create_transactions_batch(10, AccountFactory())
         own_transactions = self.create_transactions_batch(20)
         self._test_list_count(reverse("transaction-list"), len(own_transactions))
+
+    def test_list_queries_number(self):
+        """Correct number of queries must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(2, reverse("transaction-list"))
 
     def test_list_queries_number(self):
         """Exactly 2 queries must be performed."""
@@ -92,7 +102,7 @@ class TransactionDetailsViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertListEqual(response.json()["category"], ["Invalid category id."])
 
-    def test_set_category_of_other_account(self):
+    def test_set_category(self):
         """Transaction category must be successfully changed."""
         transaction = self.create_transaction()
         another_category = self.create_category()
@@ -128,7 +138,9 @@ class TransactionDetailsViewTests(BaseViewTestCase):
             Transaction.objects.get(pk=transaction.id)
 
 
-class CategorizedTransactionViewTests(BaseViewTestCase):
+class CategorizedTransactionViewTests(
+    IncomeOutcomeCategoriesTestCase, BaseViewTestCase
+):
     def test_list_transactions(self):
         """Response must contain only transactions of current category."""
         self.create_transactions_batch(10)
@@ -140,22 +152,41 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
         )
 
     def test_list_queries_number(self):
-        """Exactly 3 queries must be performed."""
-        category = self.create_category()
-        self.create_transactions_batch(20, category=category)
+        """Correct number of queries must be performed."""
+        for subcategory in self.create_categories_batch(
+            5, parent_category=self.income_category
+        ):
+            self.create_transactions_batch(10, category=subcategory)
         self._test_get_queries_number(
-            3,
-            reverse("transaction-category-transactions", args=(category.id,)),
-            category_id=category.id,
+            9,
+            reverse(
+                "transaction-category-transactions", args=(self.income_category.id,)
+            ),
+            category_id=self.income_category.id,
+        )
+
+    def test_list_transactions_recursive(self):
+        """Response must contain transactions of subcategories."""
+        subcategories = self.create_categories_batch(
+            30, parent_category=self.outcome_category
+        )
+        for category in subcategories:
+            self.create_transactions_batch(5, category=category)
+        self._test_list_count(
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
+            150,
         )
 
     def test_add_transaction_required_fields(self):
         """
         Response an error when trying to create a transaction without necessary fields.
         """
-        category = self.create_category()
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,))
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            )
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         for field in ("amount", "currency"):
@@ -163,9 +194,10 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
 
     def test_add_transaction_negative_amount(self):
         """Response an error when trying to add a transaction with negative amount."""
-        category = self.create_category()
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
             {
                 "amount": -100,
                 "currency": CurrencyCode.USD,
@@ -175,9 +207,10 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
 
     def test_add_transaction_zero_amount(self):
         """Response an error when trying to add a transaction with zero amount."""
-        category = self.create_category()
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
             {
                 "amount": 0,
                 "currency": CurrencyCode.USD,
@@ -187,11 +220,10 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
 
     def test_add_future_transaction(self):
         """Disallow adding transactions with future transaction time."""
-        category = self.create_category(
-            transaction_type=TransactionType.OUTCOME,
-        )
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
             {
                 "amount": 555,
                 "currency": CurrencyCode.USD,
@@ -229,21 +261,20 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
 
     def test_add_transaction(self):
         """Transaction must be created and have the correct transaction_type."""
-        category = self.create_category(
-            transaction_type=TransactionType.INCOME,
-        )
         request_body = {
             "amount": "123.45",
             "currency": CurrencyCode.EUR,
             "comment": "Comment",
         }
         response = self.client.post(
-            reverse("transaction-category-transactions", args=(category.id,)),
+            reverse(
+                "transaction-category-transactions", args=(self.income_category.id,)
+            ),
             request_body,
         )
         expected_response_subdict = request_body | {
-            "category": category.id,
-            "transaction_type": category.transaction_type,
+            "category": self.income_category.id,
+            "transaction_type": TransactionType.INCOME,
         }
         self.assertLessEqual(
             expected_response_subdict.items(),
@@ -251,7 +282,7 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
         )
 
     def test_add_transaction_queries_number(self):
-        """Exactly 3 queries must be performed."""
+        """Correct number of queries must be performed."""
         category = self.create_category()
         self._test_post_queries_number(
             3,
@@ -265,17 +296,65 @@ class CategorizedTransactionViewTests(BaseViewTestCase):
         )
 
 
-class TransactionFilterTests(BaseViewTestCase):
+class TransactionSummaryViewTests(
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseSummaryViewTestCase
+):
+    def test_unauthorized(self):
+        """Try to get summary without providing authorization credentials."""
+        self._test_get_unauthorized(reverse("transaction-summary"))
+
+    def test_no_transactions(self):
+        """Total value in response must be 0 if there are no transactions."""
+        self._test_total_value(reverse("transaction-summary"), 0)
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(1, reverse("transaction-summary"))
+
+    def test_currency(self):
+        """Must use account's default currency."""
+        self._test_currency(reverse("transaction-summary"))
+
+    def test_filter_outcome(self):
+        """Total value must be negative."""
+        self.create_transactions_batch(10, category=self.income_category, amount=100)
+        self.create_transactions_batch(5, category=self.outcome_category, amount=100)
+        self._test_negative_total(
+            "{}?transaction_type={}".format(
+                reverse("transaction-summary"), TransactionType.OUTCOME
+            )
+        )
+
+    def test_filter_income(self):
+        """Total value must be positive."""
+        self.create_transactions_batch(5, category=self.income_category, amount=100)
+        self.create_transactions_batch(10, category=self.outcome_category, amount=100)
+        self._test_positive_total(
+            "{}?transaction_type={}".format(
+                reverse("transaction-summary"), TransactionType.INCOME
+            )
+        )
+
+    def test_filter_time(self):
+        """Mustn't summarize transactions that don't match the filter."""
+        with self._test_filter_time(reverse("transaction-summary")) as transaction_time:
+            self.create_transactions_batch(
+                50,
+                category=self.income_category,
+                transaction_time=transaction_time,
+            )
+
+
+class TransactionFilterTests(IncomeOutcomeCategoriesTestCase, BaseViewTestCase):
     def test_transaction_type_filter(self):
         """Response must contain only transactions of provided type."""
-        self.create_transactions_batch(
-            10, category=self.create_category(transaction_type=TransactionType.OUTCOME)
-        )
+        self.create_transactions_batch(10, category=self.outcome_category)
         income_transactions = self.create_transactions_batch(
-            5, category=self.create_category(transaction_type=TransactionType.INCOME)
+            5, category=self.income_category
         )
         self._test_list_count(
-            "{}?category__transaction_type=IN".format(reverse("transaction-list")),
+            "{}?transaction_type=IN".format(reverse("transaction-list")),
             len(income_transactions),
         )
 
