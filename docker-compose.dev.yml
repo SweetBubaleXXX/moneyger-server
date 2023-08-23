@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  django:
+    extends:
+      file: docker-compose.yml
+      service: django
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./:/app:ro
+    restart: "no"
+    environment:
+      DEBUG: True
+      ALLOWED_HOSTS: "*"
+
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+    restart: "no"
+    ports:
+      - "5432:5432"
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    restart: "no"
+    ports:
+      - "6379:6349"
+
+volumes:
+  database_data:

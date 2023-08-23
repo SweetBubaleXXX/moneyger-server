@@ -4,30 +4,27 @@ services:
   django:
     build:
       context: .
-    command: python manage.py runserver 0.0.0.0:80
+    command: python3 manage.py runserver 0.0.0.0:80
     restart: unless-stopped
     depends_on:
       - db
       - redis
-    secrets:
-      - postgres_password
     env_file: .env
     environment:
-      DEBUG: "false"
-      DATABASE_URL: postgres://django:{{secrets.postgres_password}}@db:5432/django
-      CELERY_BROKER_URL: redis://:{{secrets.redis_password}}@redis:6379/
-      CELERY_RESULT_BACKEND: redis://:{{secrets.redis_password}}@redis:6379/
+      DATABASE_URL: postgres://django:${POSTGRES_PASSWORD}@db:5432/django
+      CACHE_BACKEND: django.core.cache.backends.redis.RedisCache
+      CACHE_LOCATION: redis://:${REDIS_PASSWORD}@redis:6379/
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@redis:6379/
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@redis:6379/
     ports:
       - "${PORT:-80}:80"
 
   db:
     image: postgres:15-alpine
     restart: unless-stopped
-    secrets:
-      - postgres_password
     environment:
       POSTGRES_USER: django
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     expose:
       - "5432"
     volumes:
@@ -35,16 +32,10 @@ services:
 
   redis:
     image: redis:7-alpine
-    secrets:
-      - redis_password
-    command: redis-server --loglevel warning --requirepass {{secrets.redis_password}}
+    command: redis-server --loglevel warning --requirepass ${REDIS_PASSWORD}
     restart: unless-stopped
     expose:
       - "6379"
 
-secrets:
-  postgres_password:
-    environment: "POSTGRES_PASSWORD"
-  redis_password:
-    environment: "REDIS_PASSWORD"
-  
+volumes:
+  database_data:
