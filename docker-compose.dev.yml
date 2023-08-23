@@ -14,6 +14,15 @@ services:
     environment:
       DEBUG: True
       ALLOWED_HOSTS: "*"
+    ports:
+      - "${PORT:-80}:80"
+
+  celery_worker:
+    extends:
+      file: docker-compose.yml
+      service: celery_worker
+    volumes:
+      - ./:/app:ro
 
   db:
     extends:

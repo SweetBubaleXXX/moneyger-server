@@ -16,8 +16,11 @@ services:
       CACHE_LOCATION: redis://:${REDIS_PASSWORD}@redis:6379/
       CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@redis:6379/
       CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@redis:6379/
-    ports:
-      - "${PORT:-80}:80"
+
+  celery_worker:
+    extends:
+      service: django
+    command: celery -A moneymanager worker --autoscale 2,1
 
   db:
     image: postgres:15-alpine
