@@ -31,5 +31,9 @@ class ExportJsonView(BaseViewMixin, APIView):
         if task.failed():
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         if task.ready():
-            return Response(task.result)
+            return Response(
+                task.result,
+                content_type="application/json",
+                headers={"Content-Disposition": 'attachment; filename="Moneyger.json"'},
+            )
         return Response(status=status.HTTP_202_ACCEPTED)

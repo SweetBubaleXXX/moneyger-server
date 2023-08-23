@@ -15,11 +15,3 @@ def generate_json(self, account_id: int):
         ).prefetch_related("subcategories", "transactions"),
         many=True,
     ).data
-
-
-def json_response(account_id: int):
-    return Response(
-        generate_json(account_id),
-        content_type="application/json",
-        headers={"Content-Disposition": 'attachment; filename="Moneyger.json"'},
-    )
