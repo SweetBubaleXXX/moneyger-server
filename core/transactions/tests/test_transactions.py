@@ -47,6 +47,11 @@ class TransactionListViewTests(BaseViewTestCase):
         self.create_transactions_batch(5)
         self._test_get_queries_number(2, reverse("transaction-list"))
 
+    def test_list_queries_number(self):
+        """Exactly 2 queries must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(2, reverse("transaction-list"))
+
 
 class TransactionDetailsViewTests(BaseViewTestCase):
     def test_transaction_not_found(self):
