@@ -1,5 +1,4 @@
 from datetime import timedelta
-from urllib.parse import quote
 
 from django.urls import reverse
 from django.utils import timezone
@@ -8,19 +7,18 @@ from rest_framework import status
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
 from .base import (
-    BaseTestCase,
+    BaseSummaryViewTestCase,
+    BaseViewTestCase,
     IncomeOutcomeCategoriesTestCase,
     MockCurrencyConvertorMixin,
 )
 from .factories import AccountFactory
 
 
-class TransactionListViewTests(BaseTestCase):
-    def test_unauthorized(self):
+class TransactionListViewTests(BaseViewTestCase):
+    def test_list_transactions_unauthorized(self):
         """Try to get transactions list without providing authorization credentials."""
-        self.client.logout()
-        response = self.client.get(reverse("transaction-list"))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self._test_get_unauthorized(reverse("transaction-list"))
 
     def test_cannot_add_transaction(self):
         """Forbid creating transactions using this route."""
@@ -36,18 +34,21 @@ class TransactionListViewTests(BaseTestCase):
 
     def test_no_transactions(self):
         """Response must be empty if there are on transactions."""
-        response = self.client.get(reverse("transaction-list"))
-        self.assertEqual(response.json()["count"], 0)
+        self._test_list_count(reverse("transaction-list"), 0)
 
     def test_transactions_list_amount(self):
         """Response must contain correct amount of items."""
         self.create_transactions_batch(10, AccountFactory())
         own_transactions = self.create_transactions_batch(20)
-        response = self.client.get(reverse("transaction-list"))
-        self.assertEqual(response.json()["count"], len(own_transactions))
+        self._test_list_count(reverse("transaction-list"), len(own_transactions))
+
+    def test_list_queries_number(self):
+        """Correct number of queries must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(2, reverse("transaction-list"))
 
 
-class TransactionDetailsViewTests(BaseTestCase):
+class TransactionDetailsViewTests(BaseViewTestCase):
     def test_transaction_not_found(self):
         """Response 404 if transaction doesn't exist."""
         response = self.client.get(reverse("transaction-detail", args=(12345,)))
@@ -96,7 +97,7 @@ class TransactionDetailsViewTests(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertListEqual(response.json()["category"], ["Invalid category id."])
 
-    def test_set_category_of_other_account(self):
+    def test_set_category(self):
         """Transaction category must be successfully changed."""
         transaction = self.create_transaction()
         another_category = self.create_category()
@@ -132,17 +133,32 @@ class TransactionDetailsViewTests(BaseTestCase):
             Transaction.objects.get(pk=transaction.id)
 
 
-class CategorizedTransactionViewTests(IncomeOutcomeCategoriesTestCase):
+class CategorizedTransactionViewTests(
+    IncomeOutcomeCategoriesTestCase, BaseViewTestCase
+):
     def test_list_transactions(self):
         """Response must contain only transactions of current category."""
         self.create_transactions_batch(10)
-        transactions = self.create_transactions_batch(5, category=self.outcome_category)
-        response = self.client.get(
-            reverse(
-                "transaction-category-transactions", args=(self.outcome_category.id,)
-            )
+        category = self.create_category()
+        transactions = self.create_transactions_batch(5, category=category)
+        self._test_list_count(
+            reverse("transaction-category-transactions", args=(category.id,)),
+            len(transactions),
         )
-        self.assertEqual(response.json()["count"], len(transactions))
+
+    def test_list_queries_number(self):
+        """Correct number of queries must be performed."""
+        for subcategory in self.create_categories_batch(
+            5, parent_category=self.income_category
+        ):
+            self.create_transactions_batch(10, category=subcategory)
+        self._test_get_queries_number(
+            9,
+            reverse(
+                "transaction-category-transactions", args=(self.income_category.id,)
+            ),
+            category_id=self.income_category.id,
+        )
 
     def test_list_transactions_recursive(self):
         """Response must contain transactions of subcategories."""
@@ -151,12 +167,12 @@ class CategorizedTransactionViewTests(IncomeOutcomeCategoriesTestCase):
         )
         for category in subcategories:
             self.create_transactions_batch(5, category=category)
-        response = self.client.get(
+        self._test_list_count(
             reverse(
                 "transaction-category-transactions", args=(self.outcome_category.id,)
-            )
+            ),
+            150,
         )
-        self.assertEqual(response.json()["count"], 150)
 
     def test_add_transaction_required_fields(self):
         """
@@ -260,80 +276,82 @@ class CategorizedTransactionViewTests(IncomeOutcomeCategoriesTestCase):
             response.json().items(),
         )
 
+    def test_add_transaction_queries_number(self):
+        """Correct number of queries must be performed."""
+        category = self.create_category()
+        self._test_post_queries_number(
+            3,
+            reverse("transaction-category-transactions", args=(category.id,)),
+            data={
+                "category": category.id,
+                "amount": "1.23",
+                "currency": CurrencyCode.BYN,
+            },
+            category_id=category.id,
+        )
+
 
 class TransactionSummaryViewTests(
-    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseSummaryViewTestCase
 ):
     def test_unauthorized(self):
         """Try to get summary without providing authorization credentials."""
-        self.client.logout()
-        response = self.client.get(reverse("transaction-summary"))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self._test_get_unauthorized(reverse("transaction-summary"))
 
     def test_no_transactions(self):
         """Total value in response must be 0 if there are no transactions."""
-        response = self.client.get(reverse("transaction-summary"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["total"], 0)
+        self._test_total_value(reverse("transaction-summary"), 0)
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        self.create_transactions_batch(5)
+        self._test_get_queries_number(1, reverse("transaction-summary"))
 
     def test_currency(self):
         """Must use account's default currency."""
-        response = self.client.get(reverse("transaction-summary"))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["currency"], self.account.default_currency)
+        self._test_currency(reverse("transaction-summary"))
 
     def test_filter_outcome(self):
         """Total value must be negative."""
         self.create_transactions_batch(10, category=self.income_category, amount=100)
         self.create_transactions_batch(5, category=self.outcome_category, amount=100)
-        response = self.client.get(
+        self._test_negative_total(
             "{}?transaction_type={}".format(
                 reverse("transaction-summary"), TransactionType.OUTCOME
             )
         )
-        self.assertGreater(0, response.json()["total"])
 
     def test_filter_income(self):
         """Total value must be positive."""
         self.create_transactions_batch(5, category=self.income_category, amount=100)
         self.create_transactions_batch(10, category=self.outcome_category, amount=100)
-        response = self.client.get(
+        self._test_positive_total(
             "{}?transaction_type={}".format(
                 reverse("transaction-summary"), TransactionType.INCOME
             )
         )
-        self.assertGreater(response.json()["total"], 0)
 
     def test_filter_time(self):
         """Mustn't summarize transactions that don't match the filter."""
-        old_transactions_time = timezone.now() - timedelta(days=10)
-        self.create_transactions_batch(
-            50,
-            category=self.income_category,
-            amount=5,
-            transaction_time=old_transactions_time,
-        )
-        response = self.client.get(
-            "{}?transaction_time_after={}".format(
-                reverse("transaction-summary"),
-                quote((old_transactions_time + timedelta(seconds=1)).isoformat()),
+        with self._test_filter_time(reverse("transaction-summary")) as transaction_time:
+            self.create_transactions_batch(
+                50,
+                category=self.income_category,
+                transaction_time=transaction_time,
             )
-        )
-        self.assertEqual(0, response.json()["total"])
 
 
-class TransactionFilterTests(IncomeOutcomeCategoriesTestCase):
+class TransactionFilterTests(IncomeOutcomeCategoriesTestCase, BaseViewTestCase):
     def test_transaction_type_filter(self):
         """Response must contain only transactions of provided type."""
         self.create_transactions_batch(10, category=self.outcome_category)
         income_transactions = self.create_transactions_batch(
             5, category=self.income_category
         )
-        response = self.client.get(
-            "{}?category__transaction_type=IN".format(reverse("transaction-list"))
+        self._test_list_count(
+            "{}?transaction_type=IN".format(reverse("transaction-list")),
+            len(income_transactions),
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["count"], len(income_transactions))
 
     def test_other_account_category_filter(self):
         """Forbid displaying transactions that belong to another account."""
@@ -356,7 +374,7 @@ class TransactionFilterTests(IncomeOutcomeCategoriesTestCase):
         selected_category_transactions = self.create_transactions_batch(
             10, category=selected_category
         )
-        response = self.client.get(
-            "{}?category={}".format(reverse("transaction-list"), selected_category.id)
+        self._test_list_count(
+            "{}?category={}".format(reverse("transaction-list"), selected_category.id),
+            len(selected_category_transactions),
         )
-        self.assertEqual(response.json()["count"], len(selected_category_transactions))

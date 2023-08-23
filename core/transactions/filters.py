@@ -22,19 +22,6 @@ def get_user_categories(request):
 
 class TransactionFilter(filters.FilterSet):
     category = filters.ModelChoiceFilter(queryset=get_user_categories)
-    amount = filters.RangeFilter("amount")
-    transaction_time = filters.DateTimeFromToRangeFilter("transaction_time")
-
-    class Meta:
-        model = Transaction
-        fields = (
-            "category__transaction_type",
-            "currency",
-        )
-
-
-class TransactionSummaryFilter(filters.FilterSet):
-    category = filters.ModelChoiceFilter(queryset=get_user_categories)
     transaction_type = filters.ChoiceFilter(
         "category__transaction_type", choices=TransactionType.choices
     )
@@ -42,4 +29,4 @@ class TransactionSummaryFilter(filters.FilterSet):
 
     class Meta:
         model = Transaction
-        fields = []
+        fields = ("currency",)

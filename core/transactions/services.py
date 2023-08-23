@@ -1,11 +1,23 @@
 from collections.abc import Iterable
 from decimal import Decimal
 
+from rest_framework.response import Response
+
 from moneymanager import services_container
 
 from ..constants import CurrencyCode, TransactionType
 from ..services.currency import CurrencyConverter
 from .models import Transaction, TransactionCategory
+
+
+def summary_response(request, transactions):
+    total = compute_total(transactions, request.user.default_currency)
+    return Response(
+        {
+            "total": total,
+            "currency": request.user.default_currency,
+        }
+    )
 
 
 @services_container.inject("currency_converter")
@@ -44,4 +56,6 @@ def get_all_subcategories(category: TransactionCategory):
 
 
 def get_all_transactions(category: TransactionCategory):
-    return Transaction.objects.filter(category__in=iter_categories_tree(category.id))
+    return Transaction.objects.filter(
+        category__in=iter_categories_tree(category.id)
+    ).select_related("category")
