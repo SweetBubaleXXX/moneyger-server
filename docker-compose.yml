@@ -35,7 +35,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: redis-server --loglevel warning --requirepass ${REDIS_PASSWORD}
+    command: redis-server --loglevel notice --requirepass ${REDIS_PASSWORD}
     restart: unless-stopped
     expose:
       - "6379"

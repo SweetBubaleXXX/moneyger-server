@@ -21,6 +21,7 @@ services:
     extends:
       file: docker-compose.yml
       service: celery_worker
+    command: celery -A moneymanager worker --loglevel INFO --autoscale 2,1
     volumes:
       - ./:/app:ro
 
@@ -36,9 +37,10 @@ services:
     extends:
       file: docker-compose.yml
       service: redis
+    command: redis-server --loglevel debug --requirepass ${REDIS_PASSWORD}
     restart: "no"
     ports:
-      - "6379:6349"
+      - "6379:6379"
 
 volumes:
   database_data:
