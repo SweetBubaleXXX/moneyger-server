@@ -1,3 +1,5 @@
+import logging
+
 from celery.result import AsyncResult
 from django.core.cache import cache
 from rest_framework import status
@@ -23,18 +25,21 @@ class ExportCsvView(BaseViewMixin, GenericAPIView):
 
 class ExportJsonView(BaseViewMixin, APIView):
     def get(self, request):
-        task_cache = f"task_generate_json_{request.user.id}"
-        task_id = cache.get(task_cache)
+        task_name = f"task_generate_json_{request.user.id}"
+        task_id = cache.get(task_name)
         if not task_id:
             generate_json.delay(request.user.id)
             return Response(status=status.HTTP_202_ACCEPTED)
         task = AsyncResult(task_id)
-        if task.failed():
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         if task.ready():
-            cache.delete(task_cache)
+            result = task.result
+            cache.delete(task_name)
+            task.forget()
+            if task.failed():
+                logging.error(f"Task {task_name} failed: {result!r}")
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             return Response(
-                task.result,
+                result,
                 content_type="application/json",
                 headers={"Content-Disposition": 'attachment; filename="Moneyger.json"'},
             )
