@@ -1,13 +1,14 @@
 from datetime import timedelta
 from urllib.parse import quote
 
-from django.utils import timezone
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from ..constants import CurrencyCode, TransactionType
-from ..transactions.tests.base import BaseViewTestCase
+from ..transactions.tests.base import BaseTestCase, BaseViewTestCase
 from ..transactions.tests.factories import AccountFactory
+from .tasks import generate_json
 
 
 class ExportCsvViewTests(BaseViewTestCase):
@@ -79,6 +80,12 @@ class ExportCsvViewTests(BaseViewTestCase):
         for line in response.streaming_content:
             yield line.decode()
 
+
+class GenerateJsonTestCase(BaseTestCase):
+    def test_no_categories(self):
+        """Must return empty list if there are no categories."""
+        result = generate_json(self.account.id)
+        self.assertListEqual(result, [])
 
 class ExportJsonViewTests(BaseViewTestCase):
     def test_unauthorized(self):

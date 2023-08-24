@@ -26,7 +26,8 @@ class ExportJsonView(BaseViewMixin, APIView):
         task_name = f"task_generate_json_{request.user.id}"
         task_id = cache.get(task_name)
         if not task_id:
-            generate_json.delay(request.user.id)
+            task = generate_json.delay(request.user.id)
+            cache.set(task_name, task.id)
             return Response(status=status.HTTP_202_ACCEPTED)
         task = AsyncResult(task_id)
         if task.ready():
