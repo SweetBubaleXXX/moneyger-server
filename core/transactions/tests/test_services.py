@@ -1,7 +1,8 @@
 from decimal import Decimal
 
 from ...constants import CurrencyCode
-from ..services import compute_total, get_all_subcategories, get_all_transactions
+from ..services import compute_total
+from ..utils import get_all_subcategories, get_all_transactions
 from .base import (
     BaseTestCase,
     IncomeOutcomeCategoriesTestCase,
