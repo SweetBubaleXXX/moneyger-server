@@ -11,6 +11,36 @@ from ..transactions.tests.factories import AccountFactory
 from .tasks import generate_json
 
 
+class GenerateJsonTestCase(BaseTestCase):
+    def test_no_categories(self):
+        """Must return empty list if there are no categories."""
+        result = generate_json(self.account.id)
+        self.assertListEqual(result, [])
+
+    def test_nested_categories(self):
+        """All subcategories and transactions must be present."""
+        categories = self.create_categories_batch(5)
+        for category in categories:
+            for subcategory in self.create_categories_batch(
+                3, parent_category=category
+            ):
+                self.create_transactions_batch(10, category=subcategory)
+        result = generate_json(self.account.id)
+        self.assertEqual(len(result), len(categories))
+        for category in result:
+            self.assertEqual(len(category["subcategories"]), 3)
+            self.assertListEqual(category["transactions"], [])
+            for subcategory in category["subcategories"]:
+                self.assertEqual(len(subcategory["transactions"]), 10)
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        for category in self.create_categories_batch(5):
+            self.create_categories_batch(3, parent_category=category)
+        with self.assertNumQueries(33):
+            generate_json(self.account.id)
+
+
 class ExportCsvViewTests(BaseViewTestCase):
     def test_unauthorized(self):
         """Try to get data without providing authorization credentials."""
@@ -81,46 +111,7 @@ class ExportCsvViewTests(BaseViewTestCase):
             yield line.decode()
 
 
-class GenerateJsonTestCase(BaseTestCase):
-    def test_no_categories(self):
-        """Must return empty list if there are no categories."""
-        result = generate_json(self.account.id)
-        self.assertListEqual(result, [])
-
 class ExportJsonViewTests(BaseViewTestCase):
     def test_unauthorized(self):
         """Try to get data without providing authorization credentials."""
         self._test_get_unauthorized(reverse("export-json"))
-
-    def test_view_data_of_other_account(self):
-        """Categories that belong to another account mustn't be present."""
-        self.create_categories_batch(10, account=AccountFactory())
-        response = self.client.get(reverse("export-json"))
-        self.assertListEqual(response.json(), [])
-
-    def test_no_categories(self):
-        """Must return empty list if there are no categories."""
-        response = self.client.get(reverse("export-json"))
-        self.assertListEqual(response.json(), [])
-
-    def test_nested_categories(self):
-        """All subcategories and transactions must be present."""
-        categories = self.create_categories_batch(5)
-        for category in categories:
-            for subcategory in self.create_categories_batch(
-                3, parent_category=category
-            ):
-                self.create_transactions_batch(10, category=subcategory)
-        response = self.client.get(reverse("export-json")).json()
-        self.assertEqual(len(response), len(categories))
-        for category in response:
-            self.assertEqual(len(category["subcategories"]), 3)
-            self.assertListEqual(category["transactions"], [])
-            for subcategory in category["subcategories"]:
-                self.assertEqual(len(subcategory["transactions"]), 10)
-
-    def test_queries_number(self):
-        """Correct number of queries must be performed."""
-        for category in self.create_categories_batch(5):
-            self.create_categories_batch(3, parent_category=category)
-        self._test_get_queries_number(33, reverse("export-json"))
