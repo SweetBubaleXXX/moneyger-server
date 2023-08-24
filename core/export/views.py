@@ -23,7 +23,8 @@ class ExportCsvView(BaseViewMixin, GenericAPIView):
 
 class ExportJsonView(BaseViewMixin, APIView):
     def get(self, request):
-        task_id = cache.get(f"task_generate_json_{request.user.id}")
+        task_cache = f"task_generate_json_{request.user.id}"
+        task_id = cache.get(task_cache)
         if not task_id:
             generate_json.delay(request.user.id)
             return Response(status=status.HTTP_202_ACCEPTED)
@@ -31,6 +32,7 @@ class ExportJsonView(BaseViewMixin, APIView):
         if task.failed():
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         if task.ready():
+            cache.delete(task_cache)
             return Response(
                 task.result,
                 content_type="application/json",
