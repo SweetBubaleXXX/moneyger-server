@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from ..transactions.filters import TransactionFilter
 from ..transactions.views import BaseViewMixin
-from .services import csv_response, file_timestamp
+from .services import csv_response, json_response
 from .tasks import generate_json
 
 
@@ -36,10 +36,5 @@ class ExportJsonView(BaseViewMixin, APIView):
             task.forget()
             if failed:
                 raise result
-            filename = f"Moneyger-{file_timestamp()}.json"
-            return Response(
-                result,
-                content_type="application/json",
-                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-            )
+            return json_response(result)
         return Response(status=status.HTTP_202_ACCEPTED)

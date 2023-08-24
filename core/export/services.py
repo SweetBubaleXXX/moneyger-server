@@ -4,6 +4,7 @@ from typing import Generator, TypeVar
 
 from django.http import StreamingHttpResponse
 from django.utils import timezone
+from rest_framework.response import Response
 
 from ..transactions.models import Transaction
 from .serializers import TransacationCsvSerializer
@@ -36,10 +37,19 @@ def file_timestamp() -> str:
     return timezone.now().strftime(r"%Y_%m_%d-%H_%M_%S")
 
 
-def csv_response(transactions: Iterable[Transaction]):
+def csv_response(transactions: Iterable[Transaction]) -> StreamingHttpResponse:
     filename = f"Transactions-{file_timestamp()}.csv"
     return StreamingHttpResponse(
         csv_generator(transactions),
         content_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def json_response(result: list) -> Response:
+    filename = f"Moneyger-{file_timestamp()}.json"
+    return Response(
+        result,
+        content_type="application/json",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
