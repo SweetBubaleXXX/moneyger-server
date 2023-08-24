@@ -1,8 +1,9 @@
 import csv
 from collections.abc import Iterable
-from typing import TypeVar
+from typing import Generator, TypeVar
 
 from django.http import StreamingHttpResponse
+from django.utils import timezone
 
 from ..transactions.models import Transaction
 from .serializers import TransacationCsvSerializer
@@ -15,7 +16,7 @@ class _EchoBuffer:
         return value
 
 
-def csv_generator(transactions: Iterable[Transaction]):
+def csv_generator(transactions: Iterable[Transaction]) -> Generator[str, None, None]:
     fieldnames = (
         "category",
         "transaction_type",
@@ -31,9 +32,14 @@ def csv_generator(transactions: Iterable[Transaction]):
         yield writer.writerow(row)
 
 
+def file_timestamp() -> str:
+    return timezone.now().strftime(r"%Y_%m_%d-%H_%M_%S")
+
+
 def csv_response(transactions: Iterable[Transaction]):
+    filename = f"Transactions-{file_timestamp()}.csv"
     return StreamingHttpResponse(
         csv_generator(transactions),
         content_type="text/csv",
-        headers={"Content-Disposition": 'attachment; filename="Transactions.csv"'},
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
