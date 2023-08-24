@@ -1,6 +1,5 @@
 from celery import shared_task
 from django.core.cache import cache
-from rest_framework.response import Response
 
 from ..transactions.models import TransactionCategory
 from .serializers import CategoryJsonSerializer

@@ -1,5 +1,3 @@
-import logging
-
 from celery.result import AsyncResult
 from django.core.cache import cache
 from rest_framework import status
@@ -33,11 +31,11 @@ class ExportJsonView(BaseViewMixin, APIView):
         task = AsyncResult(task_id)
         if task.ready():
             result = task.result
+            failed = task.failed()
             cache.delete(task_name)
             task.forget()
-            if task.failed():
-                logging.error(f"Task {task_name} failed: {result!r}")
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if failed:
+                raise result
             return Response(
                 result,
                 content_type="application/json",
