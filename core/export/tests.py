@@ -1,10 +1,12 @@
 from datetime import timedelta
+from unittest.mock import patch
 from urllib.parse import quote
 
-import pytest
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
+
+from core.tests import StopPatchersMixin
 
 from ..constants import CurrencyCode, TransactionType
 from ..transactions.tests.base import BaseTestCase, BaseViewTestCase
@@ -42,17 +44,49 @@ class GenerateJsonTestCase(BaseTestCase):
             generate_json(self.account.id)
 
 
-@pytest.mark.usefixtures('celery_session_app')
-@pytest.mark.usefixtures('celery_session_worker')
-class ExportJsonViewTests(BaseViewTestCase):
+class ExportJsonViewTests(StopPatchersMixin, BaseViewTestCase):
+    def setUp(self):
+        super().setUp()
+        self.generate_json_mock = patch(
+            "core.export.views.generate_json",
+        ).start()
+        self.generate_json_mock.delay.return_value.id = "id"
+        self.result_mock = patch("core.export.views.AsyncResult").start()
+        self.task_result_mock = self.result_mock.return_value
+        self.task_result_mock.result = []
+        self.task_result_mock.ready.return_value = False
+        self.task_result_mock.failed.return_value = False
+
     def test_unauthorized(self):
         """Try to get data without providing authorization credentials."""
         self._test_get_unauthorized(reverse("export-json"))
 
+    def test_task_called(self):
+        """Task for generating json must be called with correct account id."""
+        self.client.get(reverse("export-json"))
+        self.generate_json_mock.delay.assert_called_once_with(self.account.id)
+
     def test_accepted(self):
-        """Must return 202 status for the first call."""
+        """Must response 202 status for the first call."""
         response = self.client.get(reverse("export-json"))
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+    def test_task_pending(self):
+        """Must response 202 unless task is ready."""
+        for _ in range(4):
+            response = self.client.get(reverse("export-json"))
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.generate_json_mock.delay.assert_called_once()
+        self.result_mock.assert_called_with("id")
+
+    def test_task_result(self):
+        """Must response result when task is ready."""
+        response = self.client.get(reverse("export-json"))
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.task_result_mock.ready.return_value = True
+        response = self.client.get(reverse("export-json"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.json(), list)
 
 
 class ExportCsvViewTests(BaseViewTestCase):
