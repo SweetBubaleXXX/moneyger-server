@@ -1,3 +1,3 @@
-from .containers import Services
+from .utils import InjectionContainer
 
-services_container = Services()
+services_container = InjectionContainer()
