@@ -154,11 +154,11 @@ class CategorizedTransactionViewTests(
     def test_list_queries_number(self):
         """Correct number of queries must be performed."""
         for subcategory in self.create_categories_batch(
-            5, parent_category=self.income_category
+            7, parent_category=self.income_category
         ):
             self.create_transactions_batch(10, category=subcategory)
         self._test_get_queries_number(
-            9,
+            5,
             reverse(
                 "transaction-category-transactions", args=(self.income_category.id,)
             ),
