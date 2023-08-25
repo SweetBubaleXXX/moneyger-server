@@ -3,7 +3,7 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from . import services
+from . import services, utils
 from .filters import TransactionCategoryFilter, TransactionFilter
 from .permissions import IsOwnAccount
 from .serializers import (
@@ -41,7 +41,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         url_name="subcategories",
     )
     def subcategories(self, request, category_id=None):
-        subcategories = services.get_all_subcategories(self.get_object())
+        subcategories = utils.get_all_subcategories(self.get_object())
         return self._paginated_response(subcategories)
 
     @subcategories.mapping.post
@@ -64,7 +64,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         url_name="transactions",
     )
     def transactions(self, request, category_id=None):
-        transactions = services.get_all_transactions(self.get_object())
+        transactions = utils.get_all_transactions(self.get_object())
         return self._paginated_response(transactions)
 
     @transactions.mapping.post
@@ -84,7 +84,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     )
     def summary(self, request, category_id=None):
         transactions = TransactionFilter(
-            request.query_params, services.get_all_transactions(self.get_object())
+            request.query_params, utils.get_all_transactions(self.get_object())
         ).qs
         return services.summary_response(request, transactions)
 
