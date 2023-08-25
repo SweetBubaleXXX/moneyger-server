@@ -17,6 +17,7 @@ class AlfaBankNationalRatesTestCase(CacheClearMixin, TestCase):
         super().setUp()
         self.rates = AlfaBankNationalRates()
         self.patcher = patch("requests.get")
+        self.addCleanup(self.patcher.stop)
         self.RequestMock = self.patcher.start()
         self._set_response_status_code(status.HTTP_200_OK)
         self._set_response_json_body(rates_responses.ALFA_BANK_NATIONAL_RATES_RESPONSE)
