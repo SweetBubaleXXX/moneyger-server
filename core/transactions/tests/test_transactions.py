@@ -4,13 +4,14 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
+from core.tests import MockCurrencyConvertorMixin
+
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
 from .base import (
     BaseSummaryViewTestCase,
     BaseViewTestCase,
-    IncomeOutcomeCategoriesTestCase,
-    MockCurrencyConvertorMixin,
+    IncomeOutcomeCategoriesMixin,
 )
 from .factories import AccountFactory
 
@@ -139,7 +140,7 @@ class TransactionDetailsViewTests(BaseViewTestCase):
 
 
 class CategorizedTransactionViewTests(
-    IncomeOutcomeCategoriesTestCase, BaseViewTestCase
+    IncomeOutcomeCategoriesMixin, BaseViewTestCase
 ):
     def test_list_transactions(self):
         """Response must contain only transactions of current category."""
@@ -297,7 +298,7 @@ class CategorizedTransactionViewTests(
 
 
 class TransactionSummaryViewTests(
-    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseSummaryViewTestCase
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMixin, BaseSummaryViewTestCase
 ):
     def test_unauthorized(self):
         """Try to get summary without providing authorization credentials."""
@@ -346,7 +347,7 @@ class TransactionSummaryViewTests(
             )
 
 
-class TransactionFilterTests(IncomeOutcomeCategoriesTestCase, BaseViewTestCase):
+class TransactionFilterTests(IncomeOutcomeCategoriesMixin, BaseViewTestCase):
     def test_transaction_type_filter(self):
         """Response must contain only transactions of provided type."""
         self.create_transactions_batch(10, category=self.outcome_category)
