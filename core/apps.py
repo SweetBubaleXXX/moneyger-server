@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 from django.conf import settings
 
-from moneymanager import services_container, lookup_depth_container
+from moneymanager import lookup_depth_container, services_container
 
 from .services.currency import CurrencyConverter
 from .services.rates_providers import BaseRates
