@@ -48,7 +48,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         url_name="subcategories",
     )
     def subcategories(self, request, category_id=None):
-        subcategories = services.get_all_subcategories(self.get_object())
+        subcategories = utils.get_all_subcategories(self.get_object())
         return self._paginated_response(subcategories.order_by("-display_order"))
 
     @subcategories.mapping.post
@@ -71,7 +71,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         url_name="transactions",
     )
     def transactions(self, request, category_id=None):
-        transactions = services.get_all_transactions(self.get_object())
+        transactions = utils.get_all_transactions(self.get_object())
         return self._paginated_response(transactions.order_by("-transaction_time"))
 
     @transactions.mapping.post
