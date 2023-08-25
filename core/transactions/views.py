@@ -3,8 +3,7 @@ from rest_framework import generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from . import services
-from . import utils
+from . import services, utils
 from .filters import TransactionCategoryFilter, TransactionFilter
 from .permissions import IsOwnAccount
 from .serializers import (
