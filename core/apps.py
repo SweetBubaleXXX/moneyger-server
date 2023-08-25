@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 from django.conf import settings
 
-from moneymanager import services_container
+from moneymanager import services_container, lookup_depth_container
 
 from .services.currency import CurrencyConverter
 from .services.rates_providers import BaseRates
@@ -14,3 +14,4 @@ class CoreConfig(AppConfig):
     def ready(self):
         services_container.bind(BaseRates, settings.CURRENCY_RATES_PROVIDER)
         services_container[CurrencyConverter] = CurrencyConverter()
+        lookup_depth_container[int] = settings.DEFAULT_LOOKUP_DEPTH
