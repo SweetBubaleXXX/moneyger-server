@@ -35,9 +35,9 @@ class GenerateJsonTestCase(BaseTestCase):
 
     def test_queries_number(self):
         """Correct number of queries must be performed."""
-        for category in self.create_categories_batch(5):
+        for category in self.create_categories_batch(4):
             self.create_categories_batch(3, parent_category=category)
-        with self.assertNumQueries(33):
+        with self.assertNumQueries(5):
             generate_json(self.account.id)
 
 
