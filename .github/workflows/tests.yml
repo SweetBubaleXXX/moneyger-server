@@ -31,7 +31,5 @@ jobs:
         python -m pip install -r requirements.txt -r requirements-dev.txt
     - name: Run tests
       env:
-        SECRET_KEY: test-secret-3v14zj8jYMjZ6UwfIgT5Kd6/GA24obSBPw
-        ALLOWED_HOSTS: "*"
         DATABASE_URL: postgres://postgres:testpass@127.0.0.1:5432/postgres
       run: pytest

@@ -1,6 +1,7 @@
 from datetime import timedelta
 from urllib.parse import quote
 
+import pytest
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -39,6 +40,19 @@ class GenerateJsonTestCase(BaseTestCase):
             self.create_categories_batch(3, parent_category=category)
         with self.assertNumQueries(5):
             generate_json(self.account.id)
+
+
+@pytest.mark.usefixtures('celery_session_app')
+@pytest.mark.usefixtures('celery_session_worker')
+class ExportJsonViewTests(BaseViewTestCase):
+    def test_unauthorized(self):
+        """Try to get data without providing authorization credentials."""
+        self._test_get_unauthorized(reverse("export-json"))
+
+    def test_accepted(self):
+        """Must return 202 status for the first call."""
+        response = self.client.get(reverse("export-json"))
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
 
 class ExportCsvViewTests(BaseViewTestCase):
@@ -109,9 +123,3 @@ class ExportCsvViewTests(BaseViewTestCase):
         self.assertEqual(response.headers["Content-Type"], "text/csv")
         for line in response.streaming_content:
             yield line.decode()
-
-
-class ExportJsonViewTests(BaseViewTestCase):
-    def test_unauthorized(self):
-        """Try to get data without providing authorization credentials."""
-        self._test_get_unauthorized(reverse("export-json"))
