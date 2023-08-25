@@ -2,6 +2,8 @@ from decimal import Decimal
 
 from iso4217 import Currency
 
+from moneymanager import services_container
+
 from ..constants import CurrencyCode
 from .rates_providers import BaseRates
 
@@ -17,6 +19,7 @@ def decimal_to_int(value: Decimal, currency_code: CurrencyCode) -> int:
 
 
 class CurrencyConverter:
+    @services_container.inject("rates_provider")
     def __init__(self, rates_provider: BaseRates) -> None:
         self._rates_provider = rates_provider
 

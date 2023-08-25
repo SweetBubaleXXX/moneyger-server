@@ -1,6 +1,3 @@
-from .celery import app as celery_app
-from .containers import Services
+from .utils import InjectionContainer
 
-__all__ = ("celery_app",)
-
-services_container = Services()
+services_container = InjectionContainer()
