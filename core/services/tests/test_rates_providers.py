@@ -5,20 +5,18 @@ from django.conf import settings
 from django.test import TestCase
 from rest_framework import status
 
-from core.tests import CacheClearMixin
+from core.tests import CacheClearMixin, StopPatchersMixin
 
 from ...constants import CurrencyCode
 from ..rates_providers import AlfaBankNationalRates, FetchRatesException
 from . import rates_responses
 
 
-class AlfaBankNationalRatesTestCase(CacheClearMixin, TestCase):
+class AlfaBankNationalRatesTestCase(CacheClearMixin, StopPatchersMixin, TestCase):
     def setUp(self):
         super().setUp()
         self.rates = AlfaBankNationalRates()
-        self.patcher = patch("requests.get")
-        self.addCleanup(self.patcher.stop)
-        self.RequestMock = self.patcher.start()
+        self.RequestMock = patch("requests.get").start()
         self._set_response_status_code(status.HTTP_200_OK)
         self._set_response_json_body(rates_responses.ALFA_BANK_NATIONAL_RATES_RESPONSE)
 

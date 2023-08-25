@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.core.cache import cache
 from django.test import TestCase
@@ -29,3 +29,9 @@ class MockCurrencyConvertorMixin(TestCase):
     def tearDown(self):
         super().tearDown()
         services_container.reset_override()
+
+
+class StopPatchersMixin(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.addCleanup(patch.stopall)
