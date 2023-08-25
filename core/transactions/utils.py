@@ -1,5 +1,6 @@
 from typing import Generator
 
+from django.conf import settings
 from django.db.models import Prefetch
 
 from .models import Transaction, TransactionCategory
@@ -30,7 +31,7 @@ def iter_categories_tree(category: TransactionCategory):
             lookup,
             TransactionCategory.objects.all().only("id", "parent_category"),
         )
-        for lookup in subcategories_lookups(4)
+        for lookup in subcategories_lookups(settings.DEFAULT_LOOKUP_DEPTH)
     ]
     subcategories = (
         category.subcategories.all()

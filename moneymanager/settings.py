@@ -158,6 +158,8 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 100,
 }
 
+DEFAULT_LOOKUP_DEPTH = 4
+
 CURRENCY_RATES_PROVIDER = env(
     "CURRENCY_RATES_PROVIDER",
     default="core.services.rates_providers.AlfaBankNationalRates",
