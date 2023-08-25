@@ -1,9 +1,8 @@
 from decimal import Decimal
 
-from moneymanager import services_container
-
 from ...constants import CurrencyCode
-from ..services import compute_total, get_all_subcategories, get_all_transactions
+from ..services import compute_total
+from ..utils import get_all_subcategories, get_all_transactions
 from .base import (
     BaseTestCase,
     IncomeOutcomeCategoriesTestCase,
@@ -12,9 +11,6 @@ from .base import (
 
 
 class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase):
-    def tearDown(self):
-        services_container.reset_override()
-
     def test_no_transactions(self):
         """Must return 0 if there are no transactions."""
         total = compute_total([], CurrencyCode.RUB)

@@ -220,7 +220,7 @@ class TransactionCategorySummaryViewTests(
         for category in subcategories:
             self.create_transactions_batch(15, category=category)
         self._test_get_queries_number(
-            8,
+            4,
             reverse("transaction-category-summary", args=(self.outcome_category.id,)),
             category_id=self.outcome_category.id,
         )

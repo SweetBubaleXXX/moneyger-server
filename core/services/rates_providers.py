@@ -26,10 +26,11 @@ class FetchRatesException(BaseException):
 class BaseRates(Generic[T], metaclass=ABCMeta):
     supported_currencies: Iterable[str] = CurrencyCode.values
 
-    def _seconds_to_midnight(self) -> int:
-        now = datetime.utcnow()
-        midnight = datetime.combine(now + timedelta(days=1), time())
-        return (midnight - now).seconds
+    @classmethod
+    def validate_currencies(cls, *args: str) -> None:
+        for currency in args:
+            if currency not in cls.supported_currencies:
+                raise ValueError(f"No rates for {currency}")
 
     def get_data(self) -> T:
         return cache.get_or_set(
@@ -44,9 +45,12 @@ class BaseRates(Generic[T], metaclass=ABCMeta):
 
     @abstractmethod
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
-        for currency in (cur_from, cur_to):
-            if currency not in self.supported_currencies:
-                raise ValueError(f"No rates for {currency}")
+        pass
+
+    def _seconds_to_midnight(self) -> int:
+        now = datetime.utcnow()
+        midnight = datetime.combine(now + timedelta(days=1), time())
+        return (midnight - now).seconds
 
 
 class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
@@ -58,18 +62,10 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
             assert rates, "Rates list is empty"
         except (requests.RequestException, AssertionError) as e:
             raise FetchRatesException(settings.ALFA_BANK_NATIONAL_RATES_URL) from e
-        return {
-            currency["iso"]: (
-                Decimal(str(currency["rate"])) / Decimal(currency["quantity"])
-            )
-            for currency in filter(
-                lambda currency: currency["iso"] in CurrencyCode.values,
-                rates,
-            )
-        }
+        return self._parse_rates(rates)
 
     def get_rate(self, cur_from: CurrencyCode, cur_to: CurrencyCode) -> Decimal:
-        super().get_rate(cur_from, cur_to)
+        self.validate_currencies(cur_from, cur_to)
         if cur_from == cur_to:
             return Decimal(1)
         rates = self.get_data()
@@ -79,3 +75,15 @@ class AlfaBankNationalRates(BaseRates[dict[str, Decimal]]):
             return Decimal(1) / rates[cur_to]
         rate_to_byn = rates[cur_from]
         return rate_to_byn / rates[cur_to]
+
+    def _parse_rates(self, rates):
+        essential_rates = filter(
+            lambda currency: currency["iso"] in CurrencyCode.values,
+            rates,
+        )
+        return {
+            currency["iso"]: (
+                Decimal(str(currency["rate"])) / Decimal(currency["quantity"])
+            )
+            for currency in essential_rates
+        }
