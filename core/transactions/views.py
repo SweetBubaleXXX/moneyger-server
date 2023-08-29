@@ -1,5 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, viewsets
+from rest_framework import filters, generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -16,12 +16,19 @@ from .serializers import (
 
 class BaseViewMixin:
     permission_classes = (IsOwnAccount,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    )
 
 
 class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     serializer_class = TransactionCategorySerializer
     filterset_class = TransactionCategoryFilter
+    search_fields = ("name",)
+    ordering_fields = ("display_order", "name")
+    ordering = ("-display_order",)
     lookup_url_kwarg = "category_id"
 
     def get_serializer_class(self):
@@ -42,7 +49,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     )
     def subcategories(self, request, category_id=None):
         subcategories = utils.get_all_subcategories(self.get_object())
-        return self._paginated_response(subcategories)
+        return self._paginated_response(subcategories.order_by("-display_order"))
 
     @subcategories.mapping.post
     def add_subcategory(self, request, category_id=None):
@@ -65,7 +72,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     )
     def transactions(self, request, category_id=None):
         transactions = utils.get_all_transactions(self.get_object())
-        return self._paginated_response(transactions)
+        return self._paginated_response(transactions.order_by("-transaction_time"))
 
     @transactions.mapping.post
     def add_transaction(self, request, category_id=None):
@@ -100,6 +107,9 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
 class TransactionViewMixin(BaseViewMixin):
     serializer_class = TransactionSerializer
     filterset_class = TransactionFilter
+    search_fields = ("comment",)
+    ordering_fields = ("transaction_time",)
+    ordering = ("-transaction_time",)
 
     def get_queryset(self):
         return self.request.user.transaction_set.select_related("category").all()
