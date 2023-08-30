@@ -141,12 +141,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.Account"
 
 CACHES = {
-    "default": {
-        "BACKEND": env(
-            "CACHE_BACKEND", default="django.core.cache.backends.locmem.LocMemCache"
-        ),
-        "LOCATION": env("CACHE_LOCATION", default="default-cache"),
-    }
+    "default": env.cache(default="locmemcache://"),
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
