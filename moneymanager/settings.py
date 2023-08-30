@@ -173,7 +173,12 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     "SEND_ACTIVATION_EMAIL": True,
-    "ACTIVATION_URL": "/activate/{uid}/{token}",
+    "ACTIVATION_URL": "actions/activate/{uid}/{token}",
+    "PASSWORD_RESET_CONFIRM_URL": "actions/password-reset/{uid}/{token}",
+    "SERIALIZERS": {
+        "user": "accounts.serializers.AccountSerializer",
+        "current_user": "accounts.serializers.AccountSerializer",
+    },
 }
 
 SIMPLE_JWT = {
