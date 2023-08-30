@@ -28,7 +28,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class Account(AbstractUser):
-    email = models.EmailField(null=False, blank=False)
+    email = models.EmailField(unique=True, null=False, blank=False)
     default_currency = models.CharField(
         max_length=3, choices=CurrencyCode.choices, default=CurrencyCode.USD
     )
