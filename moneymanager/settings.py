@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "debug_toolbar",
     "rest_framework",
-    "verify_email.apps.VerifyEmailConfig",
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "django_filters",
