@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -48,7 +49,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",
-    "knox",
     "django_filters",
     "colorfield",
     "simple_history",
@@ -161,7 +161,7 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "knox.auth.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
@@ -169,6 +169,12 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 100,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "USER_ID_CLAIM": "account_id",
 }
 
 SPECTACULAR_SETTINGS = {

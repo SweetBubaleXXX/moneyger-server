@@ -1,11 +1,8 @@
 from django.urls import include, path
-from knox import views as knox_views
-
-from .views import LoginView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path("login/", LoginView.as_view(), name="knox_login"),
-    path("logout/", knox_views.LogoutView.as_view(), name="knox_logout"),
-    path("logoutall/", knox_views.LogoutAllView.as_view(), name="knox_logoutall"),
-    path("browsable-api-auth/", include("rest_framework.urls")),
+    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("auth/", include("rest_framework.urls")),
 ]
