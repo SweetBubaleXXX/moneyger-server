@@ -1,23 +1,19 @@
 from contextlib import contextmanager
 from datetime import timedelta
-from decimal import Decimal
-from unittest.mock import MagicMock
 from urllib.parse import quote
 
-from django.test import TestCase
 from django.urls import resolve
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 
-from moneymanager import services_container
+from core.tests import CacheClearMixin
 
 from ...constants import TransactionType
-from ..services import CurrencyConverter
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
 
 
-class BaseTestCase(APITestCase):
+class BaseTestCase(CacheClearMixin, APITestCase):
     def setUp(self):
         self.account = AccountFactory()
 
@@ -51,17 +47,6 @@ class BaseTestCase(APITestCase):
         category = category or self.create_category(account=account)
         return TransactionFactory.create_batch(
             size, account=account, category=category, **kwargs
-        )
-
-
-class IncomeOutcomeCategoriesTestCase(BaseTestCase):
-    def setUp(self):
-        super().setUp()
-        self.income_category = self.create_category(
-            transaction_type=TransactionType.INCOME
-        )
-        self.outcome_category = self.create_category(
-            transaction_type=TransactionType.OUTCOME
         )
 
 
@@ -138,16 +123,12 @@ class BaseSummaryViewTestCase(BaseViewTestCase):
         )
 
 
-class MockCurrencyConvertorMixin(TestCase):
-    CONVERTION_RATE = Decimal(2)
-
+class IncomeOutcomeCategoriesMixin(BaseTestCase):
     def setUp(self):
         super().setUp()
-        self.converter_mock = MagicMock(CurrencyConverter)
-        self.converter_mock.convert.side_effect = (
-            lambda amount, *_: amount * self.CONVERTION_RATE
+        self.income_category = self.create_category(
+            transaction_type=TransactionType.INCOME
         )
-        services_container.override(CurrencyConverter, self.converter_mock)
-
-    def tearDown(self):
-        services_container.reset_override()
+        self.outcome_category = self.create_category(
+            transaction_type=TransactionType.OUTCOME
+        )

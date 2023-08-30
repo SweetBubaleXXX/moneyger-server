@@ -1,13 +1,14 @@
 from django.urls import reverse
 from rest_framework import status
 
+from core.tests import MockCurrencyConvertorMixin
+
 from ...constants import TransactionType
 from ..models import TransactionCategory
 from .base import (
     BaseSummaryViewTestCase,
     BaseViewTestCase,
-    IncomeOutcomeCategoriesTestCase,
-    MockCurrencyConvertorMixin,
+    IncomeOutcomeCategoriesMixin,
 )
 from .factories import AccountFactory
 
@@ -170,7 +171,7 @@ class TransactionCategoryViewTests(BaseViewTestCase):
 
 
 class TransactionCategorySummaryViewTests(
-    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase, BaseSummaryViewTestCase
+    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMixin, BaseSummaryViewTestCase
 ):
     def test_unauthorized(self):
         """Try to get summary without providing authorization credentials."""

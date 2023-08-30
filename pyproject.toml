@@ -15,3 +15,10 @@ extend_skip_glob = ["*/migrations/*", "*/settings.py"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "moneymanager.settings"
 python_files = ["test*.py"]
+env = [
+  "SECRET_KEY=test-secret-key",
+  "ALLOWED_HOSTS=*",
+  "CACHE_BACKEND=django.core.cache.backends.locmem.LocMemCache",
+  "CELERY_BROKER_URL=memory://",
+  "CELERY_RESULT_BACKEND=rpc://",
+]

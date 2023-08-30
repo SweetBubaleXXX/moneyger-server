@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  django:
+    extends:
+      file: docker-compose.yml
+      service: django
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./:/app:ro
+    restart: "no"
+    environment:
+      DEBUG: True
+      ALLOWED_HOSTS: "*"
+    ports:
+      - "${PORT:-80}:80"
+
+  celery_worker:
+    extends:
+      file: docker-compose.yml
+      service: celery_worker
+    command: celery -A moneymanager worker --loglevel INFO --autoscale 2,1
+    volumes:
+      - ./:/app:ro
+
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+    restart: "no"
+    ports:
+      - "5432:5432"
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    command: redis-server --loglevel debug --requirepass ${REDIS_PASSWORD}
+    restart: "no"
+    ports:
+      - "6379:6379"
+
+volumes:
+  database_data:

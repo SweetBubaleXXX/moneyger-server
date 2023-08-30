@@ -1,16 +1,14 @@
 from decimal import Decimal
 
+from core.tests import MockCurrencyConvertorMixin
+
 from ...constants import CurrencyCode
 from ..services import compute_total
 from ..utils import get_all_subcategories, get_all_transactions
-from .base import (
-    BaseTestCase,
-    IncomeOutcomeCategoriesTestCase,
-    MockCurrencyConvertorMixin,
-)
+from .base import BaseTestCase, IncomeOutcomeCategoriesMixin
 
 
-class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesTestCase):
+class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMixin):
     def test_no_transactions(self):
         """Must return 0 if there are no transactions."""
         total = compute_total([], CurrencyCode.RUB)
