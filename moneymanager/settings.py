@@ -150,6 +150,10 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+EMAIL_CONFIG = env.email(default="consolemail://")
+
+vars().update(EMAIL_CONFIG)
+
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
