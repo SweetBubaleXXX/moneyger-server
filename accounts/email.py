@@ -16,3 +16,27 @@ class _CeleryEmailMixin(email.BaseEmailMessage):
 
 class CeleryActivationEmail(_CeleryEmailMixin, email.ActivationEmail):
     action = "activation"
+
+
+class CeleryConfirmationEmail(_CeleryEmailMixin, email.ConfirmationEmail):
+    action = "confirmation"
+
+
+class CeleryPasswordResetEmail(_CeleryEmailMixin, email.PasswordResetEmail):
+    action = "password_reset"
+
+
+class CeleryPasswordChangedConfirmationEmail(
+    _CeleryEmailMixin, email.PasswordChangedConfirmationEmail
+):
+    action = "password_changed_confirmation"
+
+
+class CeleryUsernameChangedConfirmationEmail(
+    _CeleryEmailMixin, email.UsernameChangedConfirmationEmail
+):
+    action = "username_changed_confirmation"
+
+
+class CeleryUsernameResetEmail(_CeleryEmailMixin, email.UsernameResetEmail):
+    action = "username_reset"

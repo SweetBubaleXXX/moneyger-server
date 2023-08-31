@@ -173,19 +173,23 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
+    "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
     "ACTIVATION_URL": "actions/activate/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL": "actions/password-reset/{uid}/{token}",
+    "USERNAME_RESET_CONFIRM_URL": "actions/username-reset/{uid}/{token}",
     "SERIALIZERS": {
         "user": "accounts.serializers.AccountSerializer",
         "current_user": "accounts.serializers.AccountSerializer",
     },
     "EMAIL": {
         "activation": "accounts.email.CeleryActivationEmail",
-        "confirmation": "djoser.email.ConfirmationEmail",
-        "password_reset": "djoser.email.PasswordResetEmail",
-        "password_changed_confirmation": "djoser.email.PasswordChangedConfirmationEmail",
-        "username_changed_confirmation": "djoser.email.UsernameChangedConfirmationEmail",
-        "username_reset": "djoser.email.UsernameResetEmail",
+        "confirmation": "accounts.email.CeleryConfirmationEmail",
+        "password_reset": "accounts.email.CeleryPasswordResetEmail",
+        "password_changed_confirmation": "accounts.email.CeleryPasswordChangedConfirmationEmail",
+        "username_changed_confirmation": "accounts.email.CeleryUsernameChangedConfirmationEmail",
+        "username_reset": "accounts.email.CeleryUsernameResetEmail",
     },
 }
 
