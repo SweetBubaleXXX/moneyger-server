@@ -179,6 +179,14 @@ DJOSER = {
         "user": "accounts.serializers.AccountSerializer",
         "current_user": "accounts.serializers.AccountSerializer",
     },
+    "EMAIL": {
+        "activation": "accounts.email.CeleryActivationEmail",
+        "confirmation": "djoser.email.ConfirmationEmail",
+        "password_reset": "djoser.email.PasswordResetEmail",
+        "password_changed_confirmation": "djoser.email.PasswordChangedConfirmationEmail",
+        "username_changed_confirmation": "djoser.email.UsernameChangedConfirmationEmail",
+        "username_reset": "djoser.email.UsernameResetEmail",
+    },
 }
 
 SIMPLE_JWT = {

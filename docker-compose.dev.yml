@@ -22,6 +22,7 @@ services:
       file: docker-compose.yml
       service: celery_worker
     command: celery -A moneymanager worker --loglevel INFO --autoscale 2,1
+    restart: "no"
     volumes:
       - ./:/app:ro
 
