@@ -18,7 +18,7 @@ python_files = ["test*.py"]
 env = [
   "SECRET_KEY=test-secret-key",
   "ALLOWED_HOSTS=*",
-  "CACHE_BACKEND=django.core.cache.backends.locmem.LocMemCache",
+  "CACHE_URL=locmemcache://",
   "CELERY_BROKER_URL=memory://",
   "CELERY_RESULT_BACKEND=rpc://",
 ]

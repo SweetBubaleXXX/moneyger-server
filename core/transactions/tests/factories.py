@@ -1,10 +1,10 @@
 import factory
 from django.utils import timezone
 
+from accounts.factories import DEFAULT_ACCOUNT_PASSWORD, AccountFactory
+
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction, TransactionCategory
-
-DEFAULT_ACCOUNT_PASSWORD = "default_password"
 
 
 class AccountFactory(factory.django.DjangoModelFactory):
@@ -12,6 +12,7 @@ class AccountFactory(factory.django.DjangoModelFactory):
         model = "accounts.Account"
 
     username = factory.Sequence(lambda n: f"User {n}")
+    email = factory.Sequence(lambda n: f"{n}@example.org")
     password = factory.django.Password(DEFAULT_ACCOUNT_PASSWORD)
 
 

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -46,9 +47,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "debug_toolbar",
     "rest_framework",
+    "djoser",
     "drf_spectacular",
     "drf_spectacular_sidecar",
-    "knox",
     "django_filters",
     "colorfield",
     "simple_history",
@@ -141,12 +142,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.Account"
 
 CACHES = {
-    "default": {
-        "BACKEND": env(
-            "CACHE_BACKEND", default="django.core.cache.backends.locmem.LocMemCache"
-        ),
-        "LOCATION": env("CACHE_LOCATION", default="default-cache"),
-    }
+    "default": env.cache(default="locmemcache://"),
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -155,13 +151,17 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+EMAIL_CONFIG = env.email(default="consolemail://")
+
+vars().update(EMAIL_CONFIG)
+
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "knox.auth.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
@@ -169,6 +169,39 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 100,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+DJOSER = {
+    "SEND_ACTIVATION_EMAIL": True,
+    "SEND_CONFIRMATION_EMAIL": True,
+    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": True,
+    "USERNAME_CHANGED_EMAIL_CONFIRMATION": True,
+    "ACTIVATION_URL": "actions/activate/{uid}/{token}",
+    "PASSWORD_RESET_CONFIRM_URL": "actions/password-reset/{uid}/{token}",
+    "USERNAME_RESET_CONFIRM_URL": "actions/username-reset/{uid}/{token}",
+    "SERIALIZERS": {
+        "user": "accounts.serializers.AccountSerializer",
+        "current_user": "accounts.serializers.AccountSerializer",
+    },
+    "EMAIL": {
+        "activation": "accounts.email.CeleryActivationEmail",
+        "confirmation": "accounts.email.CeleryConfirmationEmail",
+        "password_reset": "accounts.email.CeleryPasswordResetEmail",
+        "password_changed_confirmation": "accounts.email.CeleryPasswordChangedConfirmationEmail",
+        "username_changed_confirmation": "accounts.email.CeleryUsernameChangedConfirmationEmail",
+        "username_reset": "accounts.email.CeleryUsernameResetEmail",
+    },
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "AUTH_HEADER_TYPES": (
+        "Bearer",
+        "JWT",
+    ),
+    "USER_ID_CLAIM": "account_id",
 }
 
 SPECTACULAR_SETTINGS = {
