@@ -1,13 +1,32 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Literal, NotRequired, TypedDict
 
-from celery import Task, shared_task
+from celery import shared_task
 from djoser import email
 
 from .models import Account
 
+EMAIL_TYPE = Literal[
+    "activation",
+    "confirmation",
+    "password_reset",
+    "password_changed_confirmation",
+    "username_changed_confirmation",
+    "username_reset",
+]
+
+_EMAIL_TEMPLATES: Mapping[EMAIL_TYPE, type[email.BaseEmailMessage]] = {
+    "activation": email.ActivationEmail,
+    "confirmation": email.ConfirmationEmail,
+    "password_reset": email.PasswordResetEmail,
+    "password_changed_confirmation": email.PasswordChangedConfirmationEmail,
+    "username_changed_confirmation": email.UsernameChangedConfirmationEmail,
+    "username_reset": email.UsernameResetEmail,
+}
+
 
 class EmailContext(TypedDict):
+    type: EMAIL_TYPE
     user_id: int
     domain: str
     protocol: Literal["https", "http"]
@@ -17,23 +36,13 @@ class EmailContext(TypedDict):
     url: NotRequired[str]
 
 
-class _SendEmailTask(Task):
-    autoretry_for = (Exception,)
-    max_retries = 3
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        return super().on_failure(exc, task_id, args, kwargs, einfo)
-
-    def _create_message_dispatcher(
-        self, message_class: type[email.BaseEmailMessage], context: EmailContext
-    ) -> email.BaseEmailMessage:
-        return message_class(
-            context=context | {"user": Account.objects.get(pk=context["user_id"])}
-        )
-
-
-@shared_task(bind=True, base=_SendEmailTask)
-def send_activation_email(
-    self: _SendEmailTask, context: EmailContext, recipients: Iterable[str]
-):
-    self._create_message_dispatcher(email.ActivationEmail, context).send(recipients)
+@shared_task(
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3},
+)
+def send_email(context: EmailContext, recipients: Iterable[str]):
+    message_class = _EMAIL_TEMPLATES[context["type"]]
+    message = message_class(
+        context=context | {"user": Account.objects.get(pk=context["user_id"])}
+    )
+    message.send(recipients)
