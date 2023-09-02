@@ -1,9 +1,7 @@
-from datetime import timedelta
-
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
-from core.constants import SESSION_TTL_CHOICES, CurrencyCode
+from core.constants import CurrencyCode
 
 
 class CustomUserManager(BaseUserManager):
@@ -31,9 +29,6 @@ class Account(AbstractUser):
     email = models.EmailField(unique=True, null=False, blank=False)
     default_currency = models.CharField(
         max_length=3, choices=CurrencyCode.choices, default=CurrencyCode.USD
-    )
-    session_ttl = models.DurationField(
-        choices=SESSION_TTL_CHOICES, default=timedelta(weeks=1)
     )
 
     REQUIRED_FIELDS = ("email",)
