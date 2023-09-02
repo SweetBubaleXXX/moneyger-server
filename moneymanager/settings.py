@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "rest_framework",
     "djoser",
+    "djoser.webauthn",
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "django_filters",
