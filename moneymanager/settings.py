@@ -170,7 +170,7 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "accounts.authentication.CustomJWTAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -222,6 +222,16 @@ SPECTACULAR_SETTINGS = {
     "DISABLE_ERRORS_AND_WARNINGS": True,
     "TITLE": "Moneyger API",
 }
+
+JWT_ACCESS_TOKEN_COOKIE = env("JWT_ACCESS_TOKEN_COOKIE", default="access_token")
+
+JWT_REFRESH_TOKEN_COOKIE = env("JWT_REFRESH_TOKEN_COOKIE", default="refresh_token")
+
+AUTH_COOKIE_SECURE = env.bool("AUTH_SECURE_COOKIE", DEBUG)
+
+AUTH_COOKIE_HTTP_ONLY = env.bool("AUTH_COOKIE_HTTP_ONLY", True)
+
+AUTH_COOKIE_SAMESITE = env("AUTH_COOKIE_SAMESITE", default="Lax")
 
 DEFAULT_LOOKUP_DEPTH = 4
 
