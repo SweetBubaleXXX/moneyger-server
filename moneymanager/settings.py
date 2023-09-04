@@ -71,6 +71,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "accounts.middleware.TokenCookieMiddleware",
 ]
 
 ROOT_URLCONF = "moneymanager.urls"
