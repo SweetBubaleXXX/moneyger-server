@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from .views import CustomTokenObtainPairView
+from . import views
 
 urlpatterns = [
     path("browsable-api-auth/", include("rest_framework.urls")),
@@ -8,8 +8,13 @@ urlpatterns = [
     path("auth/", include("djoser.urls.authtoken")),
     path(
         "auth/jwt/create/",
-        CustomTokenObtainPairView.as_view(),
+        views.CustomJwtObtainPairView.as_view(),
         name="token_obtain_pair",
+    ),
+    path(
+        "auth/jwt/logout/",
+        views.JwtLogoutView.as_view(),
+        name="token_remove_cookie",
     ),
     path("webauthn/", include("djoser.webauthn.urls")),
 ]
