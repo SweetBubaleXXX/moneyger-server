@@ -1,7 +1,7 @@
 import factory
 from django.utils import timezone
 
-from accounts.factories import DEFAULT_ACCOUNT_PASSWORD, AccountFactory
+from accounts.tests.factories import DEFAULT_ACCOUNT_PASSWORD, AccountFactory
 
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction, TransactionCategory

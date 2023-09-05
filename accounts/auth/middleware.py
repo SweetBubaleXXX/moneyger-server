@@ -1,5 +1,7 @@
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
 
+from .. import utils
+
 
 class JwtRefreshCookieMiddleware:
     def __init__(self, get_response):
@@ -21,7 +23,7 @@ class JwtRefreshCookieMiddleware:
         new_access_token = str(decoded_refresh_token.access_token)
         request.COOKIES["access_token"] = new_access_token
         response = self.get_response(request)
-        response.set_cookie("access_token", new_access_token)
+        utils.set_access_token_cookie(response, new_access_token)
         return response
 
     def _access_token_expired(self, token: AccessToken) -> bool:
