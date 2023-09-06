@@ -12,9 +12,9 @@ urlpatterns = [
         name="token_obtain_pair",
     ),
     path(
-        "auth/jwt/logout/",
-        views.JwtLogoutView.as_view(),
-        name="token_remove_cookie",
+        "auth/jwt/refresh/",
+        views.CustomJwtRefreshView.as_view(),
+        name="token_refresh",
     ),
     path("webauthn/", include("djoser.webauthn.urls")),
 ]

@@ -71,7 +71,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "accounts.auth.middleware.JwtRefreshCookieMiddleware",
 ]
 
 ROOT_URLCONF = "moneymanager.urls"
@@ -173,7 +172,6 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
-        "accounts.auth.backends.CustomJWTAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
@@ -223,8 +221,6 @@ SPECTACULAR_SETTINGS = {
     "DISABLE_ERRORS_AND_WARNINGS": True,
     "TITLE": "Moneyger API",
 }
-
-JWT_ACCESS_TOKEN_COOKIE = env("JWT_ACCESS_TOKEN_COOKIE", default="access_token")
 
 JWT_REFRESH_TOKEN_COOKIE = env("JWT_REFRESH_TOKEN_COOKIE", default="refresh_token")
 
