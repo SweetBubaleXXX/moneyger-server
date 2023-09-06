@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "debug_toolbar",
+    "corsheaders",
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -153,6 +155,10 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+
 EMAIL_CONFIG = env.email(default="consolemail://")
 
 vars().update(EMAIL_CONFIG)
@@ -215,6 +221,14 @@ SPECTACULAR_SETTINGS = {
     "DISABLE_ERRORS_AND_WARNINGS": True,
     "TITLE": "Moneyger API",
 }
+
+JWT_REFRESH_TOKEN_COOKIE = env("JWT_REFRESH_TOKEN_COOKIE", default="refresh_token")
+
+AUTH_COOKIE_SECURE = env.bool("AUTH_SECURE_COOKIE", DEBUG)
+
+AUTH_COOKIE_HTTP_ONLY = env.bool("AUTH_COOKIE_HTTP_ONLY", True)
+
+AUTH_COOKIE_SAMESITE = env("AUTH_COOKIE_SAMESITE", default="Lax")
 
 DEFAULT_LOOKUP_DEPTH = 4
 

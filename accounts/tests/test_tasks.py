@@ -1,7 +1,7 @@
 from django.core import mail
 from django.test import TestCase
 
-from . import tasks
+from .. import tasks
 from .factories import AccountFactory
 
 
