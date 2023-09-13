@@ -33,7 +33,7 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+ALLOWED_HOSTS = ["*"] if DEBUG else env.list("ALLOWED_HOSTS")
 
 
 # Application definition
@@ -155,9 +155,13 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=DEBUG)
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 EMAIL_CONFIG = env.email(default="consolemail://")
 
@@ -224,7 +228,7 @@ SPECTACULAR_SETTINGS = {
 
 JWT_REFRESH_TOKEN_COOKIE = env("JWT_REFRESH_TOKEN_COOKIE", default="refresh_token")
 
-AUTH_COOKIE_SECURE = env.bool("AUTH_SECURE_COOKIE", DEBUG)
+AUTH_COOKIE_SECURE = env.bool("AUTH_SECURE_COOKIE", not DEBUG)
 
 AUTH_COOKIE_HTTP_ONLY = env.bool("AUTH_COOKIE_HTTP_ONLY", True)
 
