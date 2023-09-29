@@ -31,6 +31,17 @@ class JwtViewsTestCase(TestCase):
         self._obtain_token_request()
         self.assertIn("csrftoken", self.client.cookies)
 
+    def test_logout_unauthorized(self):
+        response = self.client.post(reverse("token_logout"))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_logout_cookie(self):
+        client = Client()
+        client.force_login(self.account)
+        response = client.post(reverse("token_logout"))
+        refresh_token_cookie = response.cookies[settings.JWT_REFRESH_TOKEN_COOKIE]
+        self.assertFalse(refresh_token_cookie.value)
+
     def _obtain_token_request(self):
         response = self.client.post(
             reverse("token_obtain_pair"),

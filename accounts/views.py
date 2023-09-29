@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -36,4 +38,14 @@ class CustomJwtRefreshView(TokenRefreshView):
 
         if jwt_settings.ROTATE_REFRESH_TOKENS:
             set_refresh_token_cookie(response)
+        return response
+
+
+class JwtLogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        response = Response()
+        response.delete_cookie(settings.JWT_REFRESH_TOKEN_COOKIE)
         return response
