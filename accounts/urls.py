@@ -16,5 +16,6 @@ urlpatterns = [
         views.CustomJwtRefreshView.as_view(),
         name="token_refresh",
     ),
+    path("auth/jwt/logout/", views.JwtLogoutView.as_view(), name="token_logout"),
     path("webauthn/", include("djoser.webauthn.urls")),
 ]
