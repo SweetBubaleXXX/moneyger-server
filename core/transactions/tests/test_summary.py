@@ -85,6 +85,10 @@ class TransactionCategoryStatsViewTest(
         """Try to get stats without providing authorization credentials."""
         self._test_get_unauthorized(reverse("transaction-category-stats"))
 
+    def test_currency(self):
+        """Must use account's default currency."""
+        self._test_currency(reverse("transaction-category-stats"))
+
     def test_no_transactions(self):
         """Total value in response must be 0 if there are no transactions."""
         self._test_total_value(reverse("transaction-category-stats"), 0)
@@ -115,7 +119,6 @@ class TransactionCategoryStatsViewTest(
                 reverse("transaction-category-stats"), parent_category.id
             )
         )
-        response = self.client.get(reverse("transaction-category-stats"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()["categories"]), len(subcategories))
 
