@@ -4,15 +4,9 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from core.tests import MockCurrencyConvertorMixin
-
 from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction
-from .base import (
-    BaseSummaryViewTestCase,
-    BaseViewTestCase,
-    IncomeOutcomeCategoriesMixin,
-)
+from .base import BaseViewTestCase, IncomeOutcomeCategoriesMixin
 from .factories import AccountFactory
 
 
@@ -45,11 +39,6 @@ class TransactionListViewTests(BaseViewTestCase):
 
     def test_list_queries_number(self):
         """Correct number of queries must be performed."""
-        self.create_transactions_batch(5)
-        self._test_get_queries_number(2, reverse("transaction-list"))
-
-    def test_list_queries_number(self):
-        """Exactly 2 queries must be performed."""
         self.create_transactions_batch(5)
         self._test_get_queries_number(2, reverse("transaction-list"))
 
@@ -139,9 +128,7 @@ class TransactionDetailsViewTests(BaseViewTestCase):
             Transaction.objects.get(pk=transaction.id)
 
 
-class CategorizedTransactionViewTests(
-    IncomeOutcomeCategoriesMixin, BaseViewTestCase
-):
+class CategorizedTransactionViewTests(IncomeOutcomeCategoriesMixin, BaseViewTestCase):
     def test_list_transactions(self):
         """Response must contain only transactions of current category."""
         self.create_transactions_batch(10)
@@ -295,56 +282,6 @@ class CategorizedTransactionViewTests(
             },
             category_id=category.id,
         )
-
-
-class TransactionSummaryViewTests(
-    MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMixin, BaseSummaryViewTestCase
-):
-    def test_unauthorized(self):
-        """Try to get summary without providing authorization credentials."""
-        self._test_get_unauthorized(reverse("transaction-summary"))
-
-    def test_no_transactions(self):
-        """Total value in response must be 0 if there are no transactions."""
-        self._test_total_value(reverse("transaction-summary"), 0)
-
-    def test_queries_number(self):
-        """Correct number of queries must be performed."""
-        self.create_transactions_batch(5)
-        self._test_get_queries_number(1, reverse("transaction-summary"))
-
-    def test_currency(self):
-        """Must use account's default currency."""
-        self._test_currency(reverse("transaction-summary"))
-
-    def test_filter_outcome(self):
-        """Total value must be negative."""
-        self.create_transactions_batch(10, category=self.income_category, amount=100)
-        self.create_transactions_batch(5, category=self.outcome_category, amount=100)
-        self._test_negative_total(
-            "{}?transaction_type={}".format(
-                reverse("transaction-summary"), TransactionType.OUTCOME
-            )
-        )
-
-    def test_filter_income(self):
-        """Total value must be positive."""
-        self.create_transactions_batch(5, category=self.income_category, amount=100)
-        self.create_transactions_batch(10, category=self.outcome_category, amount=100)
-        self._test_positive_total(
-            "{}?transaction_type={}".format(
-                reverse("transaction-summary"), TransactionType.INCOME
-            )
-        )
-
-    def test_filter_time(self):
-        """Mustn't summarize transactions that don't match the filter."""
-        with self._test_filter_time(reverse("transaction-summary")) as transaction_time:
-            self.create_transactions_batch(
-                50,
-                category=self.income_category,
-                transaction_time=transaction_time,
-            )
 
 
 class TransactionFilterTests(IncomeOutcomeCategoriesMixin, BaseViewTestCase):
