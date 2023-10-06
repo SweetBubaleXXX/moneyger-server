@@ -4,16 +4,6 @@ from ..constants import TransactionType
 from .models import Transaction, TransactionCategory
 
 
-class TransactionCategoryFilter(filters.FilterSet):
-    not_subcategory = filters.BooleanFilter(
-        field_name="parent_category", lookup_expr="isnull"
-    )
-
-    class Meta:
-        model = TransactionCategory
-        fields = ("transaction_type", "icon", "color")
-
-
 def get_user_categories(request):
     if request is None:
         return TransactionCategory.objects.none()
@@ -30,3 +20,14 @@ class TransactionFilter(filters.FilterSet):
     class Meta:
         model = Transaction
         fields = ("currency",)
+
+
+class TransactionCategoryFilter(filters.FilterSet):
+    parent_category = filters.ModelChoiceFilter(queryset=get_user_categories)
+    not_subcategory = filters.BooleanFilter(
+        field_name="parent_category", lookup_expr="isnull"
+    )
+
+    class Meta:
+        model = TransactionCategory
+        fields = ("transaction_type", "icon", "color")

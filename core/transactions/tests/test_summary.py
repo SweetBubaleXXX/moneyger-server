@@ -110,6 +110,11 @@ class TransactionCategoryStatsViewTest(
         subcategories = self.create_categories_batch(
             15, parent_category=parent_category
         )
+        response = self.client.get(
+            "{}?parent_category={}".format(
+                reverse("transaction-category-stats"), parent_category.id
+            )
+        )
         response = self.client.get(reverse("transaction-category-stats"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()["categories"]), len(subcategories))
