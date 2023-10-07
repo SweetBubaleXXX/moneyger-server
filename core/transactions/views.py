@@ -43,6 +43,17 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         serializer.save(account=self.request.user)
 
     @action(
+        detail=False,
+        methods=("get",),
+        url_name="stats",
+    )
+    def stats(self, request):
+        categories = self.filter_queryset(self.get_queryset())
+        if "parent_category" not in request.query_params:
+            categories = categories.filter(parent_category__isnull=True)
+        return services.stats_response(request, categories)
+
+    @action(
         detail=True,
         methods=("get",),
         url_name="subcategories",
