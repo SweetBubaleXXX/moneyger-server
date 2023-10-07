@@ -51,28 +51,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         categories = self.filter_queryset(self.get_queryset())
         if "parent_category" not in request.query_params:
             categories = categories.filter(parent_category__isnull=True)
-        categories_summary = []
-        for category in categories:
-            transactions = TransactionFilter(
-                request.query_params, utils.get_all_transactions(category)
-            ).qs
-            category_total = services.compute_total(
-                transactions, request.user.default_currency
-            )
-            categories_summary.append(
-                {
-                    "id": category.id,
-                    "total": category_total,
-                }
-            )
-        total = sum(map(lambda category: category["total"], categories_summary))
-        return Response(
-            {
-                "total": total,
-                "currency": request.user.default_currency,
-                "categories": categories_summary,
-            }
-        )
+        return services.stats_response(request, categories)
 
     @action(
         detail=True,

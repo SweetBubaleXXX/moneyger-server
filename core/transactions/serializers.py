@@ -3,6 +3,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from .models import Transaction, TransactionCategory
+from ..constants import CurrencyCode
 
 
 class TransactionCategorySerializer(serializers.ModelSerializer):
@@ -68,3 +69,17 @@ class TransactionUpdateSerializer(TransactionSerializer):
         except (TransactionCategory.DoesNotExist, AssertionError):
             raise serializers.ValidationError("Invalid category id.")
         return value
+
+
+class SummarySerializer(serializers.Serializer):
+    total = serializers.FloatField()
+    currency = serializers.ChoiceField(choices=CurrencyCode.choices)
+
+
+class CategorySummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    total = serializers.FloatField()
+
+
+class StatsSerializer(SummarySerializer):
+    categories = serializers.ListField(child=CategorySummarySerializer())
