@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from .models import Transaction, TransactionCategory
 from ..constants import CurrencyCode
+from .models import Transaction, TransactionCategory
 
 
 class TransactionCategorySerializer(serializers.ModelSerializer):
