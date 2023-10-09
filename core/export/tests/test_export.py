@@ -8,10 +8,10 @@ from rest_framework import status
 
 from core.tests import StopPatchersMixin
 
-from ..constants import CurrencyCode, TransactionType
-from ..transactions.tests.base import BaseTestCase, BaseViewTestCase
-from ..transactions.tests.factories import AccountFactory
-from .tasks import generate_json
+from ...constants import CurrencyCode, TransactionType
+from ...transactions.tests.base import BaseTestCase, BaseViewTestCase
+from ...transactions.tests.factories import AccountFactory
+from ..tasks import generate_json
 
 
 class GenerateJsonTestCase(BaseTestCase):
