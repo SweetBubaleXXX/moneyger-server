@@ -40,7 +40,7 @@ class _RecursiveField(serializers.Serializer):
 
 
 class CategoryJsonSerializer(serializers.ModelSerializer):
-    subcategories = _RecursiveField(many=True)
+    subcategories = _RecursiveField(many=True, read_only=True)
     transactions = TransactionJsonSerializer(many=True)
 
     class Meta:
@@ -56,9 +56,8 @@ class CategoryJsonSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        validated_data.pop("subcategories")
-        transactions = validated_data.pop("transactions")
         account = self.context["account"]
+        transactions = validated_data.pop("transactions")
         category = TransactionCategory.objects.create(account=account, **validated_data)
         Transaction.objects.bulk_create(
             Transaction(
