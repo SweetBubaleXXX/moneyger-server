@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 
 from ..transactions.models import Transaction
-from .serializers import TransacationCsvSerializer, CategoryJsonSerializer
+from .serializers import CategoryJsonSerializer, TransacationCsvSerializer
 
 T = TypeVar("T")
 
@@ -55,7 +55,7 @@ def json_response(result: list) -> Response:
     )
 
 
-def import_categories(account, categories: list):
+def add_categories_to_account(account, categories: list):
     if not categories:
         return
     serializer = CategoryJsonSerializer(
@@ -66,4 +66,4 @@ def import_categories(account, categories: list):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     for category in categories:
-        import_categories(account, category["subcategories"])
+        add_categories_to_account(account, category["subcategories"])

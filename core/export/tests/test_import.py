@@ -3,8 +3,8 @@ from copy import deepcopy
 from django.urls import reverse
 from rest_framework import status
 
-from ...transactions.tests.base import BaseViewTestCase
 from ...transactions.models import Transaction, TransactionCategory
+from ...transactions.tests.base import BaseViewTestCase
 from .contants import EXPORTED_CATEGORIES
 
 
@@ -48,3 +48,7 @@ class ImportJsonViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Transaction.objects.count(), 4)
         self.assertEqual(TransactionCategory.objects.count(), 8)
+
+    def test_queries_number(self):
+        """Correct number of queries must be performed."""
+        self._test_post_queries_number(5, reverse("import-json"), EXPORTED_CATEGORIES)
