@@ -7,8 +7,14 @@ from rest_framework.views import APIView
 
 from ..transactions.filters import TransactionFilter
 from ..transactions.views import BaseViewMixin
-from .services import csv_response, json_response
+from .services import csv_response, import_categories, json_response
 from .tasks import generate_json
+
+
+class ImportJsonView(BaseViewMixin, APIView):
+    def post(self, request):
+        import_categories(request.user, request.data)
+        return Response()
 
 
 class ExportCsvView(BaseViewMixin, GenericAPIView):

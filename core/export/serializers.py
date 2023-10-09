@@ -54,3 +54,18 @@ class CategoryJsonSerializer(serializers.ModelSerializer):
             "subcategories",
             "transactions",
         )
+
+    def create(self, validated_data):
+        validated_data.pop("subcategories")
+        transactions = validated_data.pop("transactions")
+        account = self.context["account"]
+        category = TransactionCategory.objects.create(account=account, **validated_data)
+        Transaction.objects.bulk_create(
+            Transaction(
+                account=account,
+                category=category,
+                **transaction,
+            )
+            for transaction in transactions
+        )
+        return category
