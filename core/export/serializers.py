@@ -1,8 +1,9 @@
-from typing import NamedTuple
+from dataclasses import asdict
 
 from rest_framework import serializers
 
 from ..transactions.models import Transaction, TransactionCategory
+from .utils import CategoryImportContext, ParsedCategory
 
 
 class TransacationCsvSerializer(serializers.ModelSerializer):
@@ -35,12 +36,7 @@ class TransactionJsonSerializer(serializers.ModelSerializer):
         )
 
 
-class _ParsedCategory(NamedTuple):
-    instance: TransactionCategory
-    transactions: list[dict]
-
-
-def _create_transactions(parsed_category: _ParsedCategory):
+def _create_transactions(parsed_category: ParsedCategory):
     return Transaction.objects.bulk_create(
         Transaction(
             account=parsed_category.instance.account,
@@ -53,21 +49,21 @@ def _create_transactions(parsed_category: _ParsedCategory):
 
 class CategoryListJsonSerializer(serializers.ListSerializer):
     def create(self, validated_data):
-        account = self.context["account"]
-        parsed_categories: list[_ParsedCategory] = []
+        context = CategoryImportContext(**self.context)
+        parsed_categories: list[ParsedCategory] = []
         for category_data in validated_data:
             transactions = category_data.pop("transactions")
             category_instance = TransactionCategory(
-                account=account,
+                **asdict(context),
                 **category_data,
             )
-            parsed_categories.append(_ParsedCategory(category_instance, transactions))
+            parsed_categories.append(ParsedCategory(category_instance, transactions))
         TransactionCategory.objects.bulk_create(
             category.instance for category in parsed_categories
         )
         for category in parsed_categories:
             _create_transactions(category)
-        return parsed_categories
+        return (category.instance for category in parsed_categories)
 
 
 class _RecursiveField(serializers.Serializer):
@@ -94,8 +90,11 @@ class CategoryJsonSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        account = self.context["account"]
+        context = CategoryImportContext(**self.context)
         transactions = validated_data.pop("transactions")
-        category = TransactionCategory.objects.create(account=account, **validated_data)
-        _create_transactions(_ParsedCategory(category, transactions))
+        category = TransactionCategory.objects.create(
+            **asdict(context),
+            **validated_data,
+            )
+        _create_transactions(ParsedCategory(category, transactions))
         return category

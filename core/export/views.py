@@ -9,11 +9,12 @@ from ..transactions.filters import TransactionFilter
 from ..transactions.views import BaseViewMixin
 from .services import add_categories_to_account, csv_response, json_response
 from .tasks import generate_json
+from .utils import CategoryImportContext
 
 
 class ImportJsonView(BaseViewMixin, APIView):
     def post(self, request):
-        add_categories_to_account(request.user, request.data)
+        add_categories_to_account(request.data, CategoryImportContext(request.user))
         return Response()
 
 

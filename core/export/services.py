@@ -1,6 +1,7 @@
 import csv
 from collections.abc import Iterable
-from typing import Generator, TypeVar
+from dataclasses import asdict
+from typing import Generator
 
 from django.http import StreamingHttpResponse
 from django.utils import timezone
@@ -8,13 +9,11 @@ from rest_framework.response import Response
 
 from ..transactions.models import Transaction
 from .serializers import CategoryJsonSerializer, TransacationCsvSerializer
+from .utils import CategoryImportContext, EchoBuffer
 
-T = TypeVar("T")
 
-
-class _EchoBuffer:
-    def write(self, value: T) -> T:
-        return value
+def file_timestamp() -> str:
+    return timezone.now().strftime(r"%Y_%m_%d-%H_%M_%S")
 
 
 def csv_generator(transactions: Iterable[Transaction]) -> Generator[str, None, None]:
@@ -26,15 +25,11 @@ def csv_generator(transactions: Iterable[Transaction]) -> Generator[str, None, N
         "transaction_time",
         "comment",
     )
-    writer = csv.DictWriter(_EchoBuffer(), fieldnames)
+    writer = csv.DictWriter(EchoBuffer(), fieldnames)
     yield writer.writeheader()
     for entry in transactions:
         row = TransacationCsvSerializer(entry).data
         yield writer.writerow(row)
-
-
-def file_timestamp() -> str:
-    return timezone.now().strftime(r"%Y_%m_%d-%H_%M_%S")
 
 
 def csv_response(transactions: Iterable[Transaction]) -> StreamingHttpResponse:
@@ -55,15 +50,21 @@ def json_response(result: list) -> Response:
     )
 
 
-def add_categories_to_account(account, categories: list):
+def add_categories_to_account(categories: list, context: CategoryImportContext):
     if not categories:
         return
     serializer = CategoryJsonSerializer(
         data=categories,
-        context={"account": account},
+        context=asdict(context),
         many=True,
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save()
-    for category in categories:
-        add_categories_to_account(account, category["subcategories"])
+    created_categories = serializer.save()
+    for category_data, category_instance in zip(categories, created_categories):
+        add_categories_to_account(
+            category_data["subcategories"],
+            CategoryImportContext(
+                account=context.account,
+                parent_category=category_instance,
+            ),
+        )
