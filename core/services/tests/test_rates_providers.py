@@ -9,7 +9,7 @@ from core.tests import CacheClearMixin, StopPatchersMixin
 
 from ...constants import CurrencyCode
 from ..rates_providers import AlfaBankNationalRates, FetchRatesException
-from . import rates_responses
+from . import constants
 
 
 class AlfaBankNationalRatesTestCase(CacheClearMixin, StopPatchersMixin, TestCase):
@@ -18,7 +18,7 @@ class AlfaBankNationalRatesTestCase(CacheClearMixin, StopPatchersMixin, TestCase
         self.rates = AlfaBankNationalRates()
         self.RequestMock = patch("requests.get").start()
         self._set_response_status_code(status.HTTP_200_OK)
-        self._set_response_json_body(rates_responses.ALFA_BANK_NATIONAL_RATES_RESPONSE)
+        self._set_response_json_body(constants.ALFA_BANK_NATIONAL_RATES_RESPONSE)
 
     def _set_response_status_code(self, code):
         self.RequestMock.return_value.status_code = code
