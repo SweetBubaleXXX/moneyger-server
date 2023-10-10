@@ -5,7 +5,7 @@ from rest_framework import status
 
 from ...transactions.models import Transaction, TransactionCategory
 from ...transactions.tests.base import BaseViewTestCase
-from .contants import EXPORTED_CATEGORIES
+from .constants import EXPORTED_CATEGORIES
 
 
 class ImportJsonViewTests(BaseViewTestCase):
@@ -48,6 +48,10 @@ class ImportJsonViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Transaction.objects.count(), 4)
         self.assertEqual(TransactionCategory.objects.count(), 8)
+        subcategories_count = TransactionCategory.objects.filter(
+            parent_category__isnull=False
+        ).count()
+        self.assertEqual(subcategories_count, 6)
 
     def test_queries_number(self):
         """Correct number of queries must be performed."""
