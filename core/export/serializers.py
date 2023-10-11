@@ -95,6 +95,6 @@ class CategoryJsonSerializer(serializers.ModelSerializer):
         category = TransactionCategory.objects.create(
             **asdict(context),
             **validated_data,
-            )
+        )
         _create_transactions(ParsedCategory(category, transactions))
         return category
