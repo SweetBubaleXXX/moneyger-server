@@ -36,11 +36,13 @@ class ImportJsonViewTests(BaseViewTestCase):
     def test_atomic(self):
         """Must rollback if an error occured during import."""
         broken_data = deepcopy(EXPORTED_CATEGORIES)
-        broken_data[1]["transaction_type"] = "invalid value"
+        first_category = broken_data[0]
+        first_subcategory = first_category["subcategories"][0]
+        first_subcategory["transaction_type"] = "invalid value"
         response = self.client.post(reverse("import-json"), broken_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        transactions_count = self.account.transaction_set.count()
-        self.assertEqual(transactions_count, 0)
+        categories_count = self.account.transactioncategory_set.count()
+        self.assertEqual(categories_count, 0)
 
     def test_import(self):
         """All categories and transactions must be imported."""

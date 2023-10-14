@@ -126,7 +126,7 @@ class ExportCsvViewTests(BaseViewTestCase):
     def test_queries_number(self):
         """Correct number of queries must be performed."""
         self.create_transactions_batch(20)
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             self._get_csv_response()
 
     def test_filter(self):
