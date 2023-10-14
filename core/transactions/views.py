@@ -43,7 +43,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         serializer.save(account=self.request.user)
 
     def paginate_queryset(self, queryset):
-        if 'all' in self.request.query_params:
+        if "all" in self.request.query_params:
             return None
         return super().paginate_queryset(queryset)
 
