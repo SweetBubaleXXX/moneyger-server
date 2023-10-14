@@ -22,6 +22,17 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         own_categories = self.create_categories_batch(5)
         self._test_list_count(reverse("transaction-category-list"), len(own_categories))
 
+    def test_omit_pagination(self):
+        """Pagination must be disabled if specific query param present."""
+        categories = self.create_categories_batch(5)
+        response = self.client.get(
+            "{}?all=True".format(reverse("transaction-category-list"))
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_body = response.json()
+        self.assertIsInstance(response_body, list)
+        self.assertEqual(len(response_body), len(categories))
+
     def test_list_queries_number(self):
         """Correct number of queries must be performed."""
         self.create_categories_batch(5)
