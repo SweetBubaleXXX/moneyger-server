@@ -206,6 +206,19 @@ class CategorizedTransactionViewTests(IncomeOutcomeCategoriesMixin, BaseViewTest
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_add_transaction_tiny_amount(self):
+        """Response an error if amount is less than currency min unit."""
+        response = self.client.post(
+            reverse(
+                "transaction-category-transactions", args=(self.outcome_category.id,)
+            ),
+            {
+                "amount": 0.00001,
+                "currency": CurrencyCode.USD,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_future_transaction(self):
         """Disallow adding transactions with future transaction time."""
         response = self.client.post(
