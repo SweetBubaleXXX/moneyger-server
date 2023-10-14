@@ -323,7 +323,7 @@ class TransactionFilterTests(IncomeOutcomeCategoriesMixin, BaseViewTestCase):
         )
 
     def test_transactions_display_order(self):
-        """Recent transactions must be dislplayed first."""
+        """Recent transactions must be displayed first."""
         recent_transaction_time = timezone.now()
         self.create_transactions_batch(
             3, transaction_time=(recent_transaction_time - timedelta(hours=1))

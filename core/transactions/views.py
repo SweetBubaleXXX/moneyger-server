@@ -28,7 +28,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     filterset_class = TransactionCategoryFilter
     search_fields = ("name",)
     ordering_fields = ("display_order", "name")
-    ordering = ("-display_order",)
+    ordering = ("display_order",)
     lookup_url_kwarg = "category_id"
 
     def get_serializer_class(self):

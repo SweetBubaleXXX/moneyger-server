@@ -176,10 +176,10 @@ class TransactionCategoryFilterTests(BaseViewTestCase):
         )
 
     def test_categories_display_order(self):
-        """Categories with higher display order must be displayed first."""
-        self.create_category()
-        category = self.create_category(display_order=13)
-        self.create_category()
+        """Categories must be displayed in correct order."""
+        for display_order in range(10):
+            self.create_category(display_order=display_order)
         response = self.client.get(reverse("transaction-category-list"))
-        first_category = response.json()["results"][0]
-        self.assertEqual(first_category["id"], category.id)
+        for display_order in range(10):
+            category = response.json()["results"][display_order]
+            self.assertEqual(category["display_order"], display_order)
