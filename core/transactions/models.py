@@ -24,18 +24,6 @@ class BaseModel(models.Model):
 
 
 class TransactionCategory(BaseModel):
-    COLOR_PALETTE = [
-        ("#ffffff", "white"),
-        ("#ff6b22", "orange"),
-        ("#cddc39", "lime"),
-        ("#b9b9b9", "grey"),
-        ("#af2422", "red"),
-        ("#673ab7", "purple"),
-        ("#4cd964", "green"),
-        ("#2196f3", "blue"),
-        ("#009688", "dark teal"),
-    ]
-
     parent_category = models.ForeignKey(
         "self",
         related_name="subcategories",
@@ -47,7 +35,7 @@ class TransactionCategory(BaseModel):
     name = models.CharField(max_length=64)
     display_order = models.IntegerField(default=0)
     icon = models.CharField(max_length=64, blank=True)
-    color = ColorField(samples=COLOR_PALETTE)
+    color = ColorField()
 
 
 class Transaction(BaseModel):
