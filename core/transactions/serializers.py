@@ -1,8 +1,9 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from rest_framework import serializers
 
 from ..constants import CurrencyCode
+from ..services.currency import decimal_to_int
 from .models import Transaction, TransactionCategory
 
 
@@ -30,8 +31,16 @@ class TransactionCategoryUpdateSerializer(TransactionCategorySerializer):
 
 class PositiveDecimalField(serializers.DecimalField):
     def to_internal_value(self, data):
-        if Decimal(data) <= 0:
-            raise serializers.ValidationError("Ensure this value is greater than 0.")
+        try:
+            value = Decimal(data)
+            if value <= 0:
+                raise ValueError
+        except InvalidOperation as exc:
+            raise serializers.ValidationError("Must be a decimal value.") from exc
+        except ValueError as exc:
+            raise serializers.ValidationError(
+                "Ensure this value is greater than 0."
+            ) from exc
         return super().to_internal_value(data)
 
 
@@ -53,6 +62,15 @@ class TransactionSerializer(serializers.ModelSerializer):
             "comment",
             "transaction_time",
         )
+
+    def create(self, validated_data):
+        amount = decimal_to_int(
+            validated_data["amount_decimal"],
+            validated_data["currency"],
+        )
+        if amount == 0:
+            raise serializers.ValidationError("Amount must be greater than 0.")
+        return super().create(validated_data)
 
 
 class TransactionUpdateSerializer(TransactionSerializer):

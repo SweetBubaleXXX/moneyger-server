@@ -28,7 +28,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
     filterset_class = TransactionCategoryFilter
     search_fields = ("name",)
     ordering_fields = ("display_order", "name")
-    ordering = ("-display_order",)
+    ordering = ("display_order",)
     lookup_url_kwarg = "category_id"
 
     def get_serializer_class(self):
@@ -41,6 +41,11 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(account=self.request.user)
+
+    def paginate_queryset(self, queryset):
+        if "all" in self.request.query_params:
+            return None
+        return super().paginate_queryset(queryset)
 
     @action(
         detail=False,

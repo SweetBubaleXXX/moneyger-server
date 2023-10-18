@@ -22,7 +22,11 @@ class ExportCsvView(BaseViewMixin, GenericAPIView):
     filterset_class = TransactionFilter
 
     def get_queryset(self):
-        return self.request.user.transaction_set.all().select_related("category")
+        return (
+            self.request.user.transaction_set.all()
+            .order_by("-transaction_time")
+            .select_related("category")
+        )
 
     def get(self, request):
         return csv_response(self.filter_queryset(self.get_queryset()))
