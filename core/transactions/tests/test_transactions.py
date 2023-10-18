@@ -286,7 +286,7 @@ class CategorizedTransactionViewTests(IncomeOutcomeCategoriesMixin, BaseViewTest
         """Correct number of queries must be performed."""
         category = self.create_category()
         self._test_post_queries_number(
-            3,
+            5,
             reverse("transaction-category-transactions", args=(category.id,)),
             data={
                 "category": category.id,

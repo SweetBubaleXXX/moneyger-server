@@ -2,6 +2,9 @@ from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.forms import ValidationError
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
@@ -67,3 +70,14 @@ class Transaction(BaseModel):
     @amount_decimal.setter
     def amount_decimal(self, value):
         self.amount = currency.decimal_to_int(value, self.currency)
+
+    def clean(self):
+        super().clean()
+        if self.account != self.category.account:
+            raise ValidationError("Category must have the same account.")
+
+
+@receiver(pre_save, sender=Transaction)
+def validate_transaction(sender, instance, raw, **kwargs):
+    if not raw:
+        instance.full_clean()
