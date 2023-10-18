@@ -8,7 +8,7 @@ from .models import Account
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     model = Account
-    list_display = ("username", "email", "is_staff")
+    list_display = ("username", "email", "is_active", "is_staff")
     fieldsets = UserAdmin.fieldsets + (
         (
             "Preferences",
