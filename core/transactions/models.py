@@ -37,6 +37,9 @@ class TransactionCategory(BaseModel):
     icon = models.CharField(max_length=64, blank=True)
     color = ColorField()
 
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+
 
 class Transaction(BaseModel):
     category = models.ForeignKey(
@@ -63,6 +66,9 @@ class Transaction(BaseModel):
         super().clean()
         if self.account != self.category.account:
             raise ValidationError("Category must have the same account.")
+
+    def __str__(self):
+        return f"{self.category} [{self.id}]"
 
 
 @receiver(pre_save, sender=Transaction)
