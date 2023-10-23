@@ -55,7 +55,9 @@ class Transaction(BaseModel):
     currency = models.CharField(max_length=3, choices=CurrencyCode.choices)
     comment = models.CharField(max_length=255, blank=True)
     transaction_time = models.DateTimeField(
-        default=timezone.now, validators=(MaxValueValidator(timezone.now),)
+        default=timezone.now,
+        db_index=True,
+        validators=(MaxValueValidator(timezone.now),),
     )
 
     @property

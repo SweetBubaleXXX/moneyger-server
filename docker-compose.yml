@@ -21,7 +21,7 @@ services:
   celery_worker:
     extends:
       service: django
-    command: celery -A moneymanager worker --autoscale 2,1
+    command: celery -A moneymanager worker --autoscale 2,1 --loglevel INFO --events
 
   db:
     image: postgres:15-alpine
