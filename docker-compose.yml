@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  django:
+    build:
+      context: .
+    command: python3 manage.py runserver 0.0.0.0:80
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://django:${POSTGRES_PASSWORD}@db:5432/django
+      CACHE_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD}@redis:6379/2
+      EMAIL_URL: ${EMAIL_URL:-filemail:////tmp/mail/}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+
+  celery_worker:
+    extends:
+      service: django
+    command: celery -A moneymanager worker --autoscale 2,1 --loglevel INFO --events
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
+    volumes:
+      - database_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --loglevel notice --requirepass ${REDIS_PASSWORD}
+    restart: unless-stopped
+    expose:
+      - "6379"
+
+volumes:
+  database_data:
