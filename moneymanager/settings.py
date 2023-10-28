@@ -39,6 +39,7 @@ ALLOWED_HOSTS = ["*"] if DEBUG else env.list("ALLOWED_HOSTS")
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -92,7 +93,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "moneymanager.wsgi.application"
+ASGI_APPLICATION = "moneymanager.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": env.list("WEBSOCKET_CHANNEL_LAYERS"),
+        },
+    },
+}
 
 
 # Database
