@@ -1,5 +1,6 @@
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.contrib.auth.models import AnonymousUser
 
 DEFAULT_CHAT_GROUP = "public_chat"
 
@@ -15,8 +16,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def receive_json(self, content):
         user = self.scope["user"]
-        username = await database_sync_to_async(user.username)()
-        is_admin = await database_sync_to_async(user.is_admin)()
+        if isinstance(user, AnonymousUser):
+            return await self.close(code=4004)
+        username = await database_sync_to_async(lambda: user.username)()
+        is_admin = await database_sync_to_async(lambda: user.is_superuser)()
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -24,14 +27,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 "user": username,
                 "is_admin": is_admin,
                 "message": content["message"],
-            }
+            },
         )
 
     async def chat_message(self, event):
-        await self.send_json(
-            {
-                "user": event["user"],
-                "is_admin": event["is_admin"],
-                "message": event["message"],
-            }
-        )
+        await self.send_json(event)
