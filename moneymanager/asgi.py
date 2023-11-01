@@ -19,7 +19,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "moneymanager.settings")
 django_asgi_app = get_asgi_application()
 
 from core.chat.middleware import JWTAuthMiddleware  # noqa: E402
-from core.chat.urls import websocket_urlpatterns  # noqa: E402
+from core.chat.urls import websocket_urls  # noqa: E402
 
 application = ProtocolTypeRouter(
     {
@@ -27,7 +27,7 @@ application = ProtocolTypeRouter(
         "websocket": AllowedHostsOriginValidator(
             JWTAuthMiddleware(
                 AuthMiddlewareStack(
-                    URLRouter(websocket_urlpatterns),
+                    URLRouter(websocket_urls),
                 ),
             )
         ),
