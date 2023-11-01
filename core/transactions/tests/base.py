@@ -15,6 +15,7 @@ from .factories import AccountFactory, TransactionCategoryFactory, TransactionFa
 
 class BaseTestCase(CacheClearMixin, APITestCase):
     def setUp(self):
+        super().setUp()
         self.account = AccountFactory()
 
     def create_category(self, account=None, parent_category=None, **kwargs):
