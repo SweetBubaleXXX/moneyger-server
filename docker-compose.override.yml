@@ -4,4 +4,4 @@ services:
   django:
     ports:
       - "${PORT:-80}:80"
-    command: gunicorn -c gunicorn.conf.py moneymanager.wsgi
+    command: gunicorn -c gunicorn.conf.py moneymanager.asgi -k uvicorn.workers.UvicornWorker
