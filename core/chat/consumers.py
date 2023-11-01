@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.utils import timezone
 
 from .services import MessageCache, SerializedMessage
 
@@ -28,6 +29,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             user=username,
             is_admin=is_admin,
             message_text=content["message"],
+            timestamp=timezone.now().timestamp()
         )
         MessageCache(self.group_name).push(message)
         await self.channel_layer.group_send(

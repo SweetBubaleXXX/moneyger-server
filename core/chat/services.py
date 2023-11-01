@@ -12,6 +12,7 @@ class SerializedMessage(TypedDict):
     user: str
     is_admin: bool
     message_text: str
+    timestamp: float
 
 
 class MessageCache:

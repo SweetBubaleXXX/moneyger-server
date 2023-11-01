@@ -6,3 +6,4 @@ class MessageSerializer(serializers.Serializer):
     user = serializers.CharField()
     is_admin = serializers.BooleanField()
     message_text = serializers.CharField()
+    timestamp = serializers.FloatField(min_value=0)
