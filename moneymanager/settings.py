@@ -274,3 +274,5 @@ ALFA_BANK_NATIONAL_RATES_URL = env(
     "ALFA_BANK_NATIONAL_RATES_URL",
     default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",
 )
+
+CHAT_CACHE_SIZE_LIMIT = 100

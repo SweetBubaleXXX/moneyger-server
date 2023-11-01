@@ -9,8 +9,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from accounts.tests.factories import AccountFactory
 
-from .consumers import ChatConsumer
-from .middleware import JWTAuthMiddleware
+from ..consumers import ChatConsumer
+from ..middleware import JWTAuthMiddleware
 
 
 class ChatConsumerTests(TransactionTestCase):
@@ -47,7 +47,7 @@ class ChatConsumerTests(TransactionTestCase):
                     "type": "chat.message",
                     "user": self.user.username,
                     "is_admin": False,
-                    "message": "Test message",
+                    "message_text": "Test message",
                 },
             )
 
