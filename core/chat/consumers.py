@@ -22,6 +22,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         user = self.scope["user"]
         if isinstance(user, AnonymousUser):
             return await self.close(code=4004)
+        if "message" not in content:
+            return
         username = await database_sync_to_async(lambda: user.username)()
         is_admin = await database_sync_to_async(lambda: user.is_superuser)()
         message = SerializedMessage(
@@ -29,7 +31,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             user=username,
             is_admin=is_admin,
             message_text=content["message"],
-            timestamp=timezone.now().timestamp()
+            timestamp=timezone.now().timestamp(),
         )
         MessageCache(self.group_name).push(message)
         await self.channel_layer.group_send(
