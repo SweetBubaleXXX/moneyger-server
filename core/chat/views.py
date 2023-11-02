@@ -1,3 +1,5 @@
+from operator import itemgetter
+
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +14,7 @@ class MessagesView(APIView):
 
     def get(self, request):
         messages = MessageCache(settings.DEFAULT_CHAT_GROUP).get_all()
-        serializer = MessageSerializer(data=list(messages), many=True)
+        sorted_messages = sorted(messages, key=itemgetter("timestamp"))
+        serializer = MessageSerializer(data=list(sorted_messages), many=True)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)

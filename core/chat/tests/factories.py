@@ -13,3 +13,4 @@ class MessageFactory(factory.Factory):
     user = factory.Faker("first_name")
     is_admin = False
     message_text = factory.Faker("sentence")
+    timestamp = factory.Faker("unix_time")
