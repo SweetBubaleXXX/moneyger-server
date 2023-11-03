@@ -14,6 +14,7 @@ You can create `.env` file in project root directory.
 
 - [`CACHE_URL`](https://django-environ.readthedocs.io/en/latest/types.html#environ-env-cache-url)
 - [`EMAIL_CONFIG`](https://django-environ.readthedocs.io/en/latest/types.html#environ-env-search-url)
+- [`WEBSOCKET_CHANNEL_LAYERS`](https://channels.readthedocs.io/en/latest/topics/channel_layers.html#redis-channel-layer)
 - `CORS_ALLOW_ALL_ORIGINS` *boolean*
 - `CORS_ALLOWED_ORIGINS` *list*
 - `CSRF_TRUSTED_ORIGINS` *list*
