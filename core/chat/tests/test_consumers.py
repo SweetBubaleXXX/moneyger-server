@@ -22,20 +22,18 @@ class ChatConsumerTests(TransactionTestCase):
         )
 
     async def test_connection(self):
-        async with self._connect():
+        async with self._connect(self.access_token):
             pass
 
     async def test_unauthorized(self):
-        async with self._connect():
-            await self.communicator.send_json_to({"message": "Test message"})
-            with self.assertRaises(AssertionError):
-                await self.communicator.receive_json_from()
+        with self.assertRaises(AssertionError):
+            async with self._connect():
+                pass
 
     async def test_invalid_token(self):
-        async with self._connect("invalid_token"):
-            await self.communicator.send_json_to({"message": "Test message"})
-            with self.assertRaises(AssertionError):
-                await self.communicator.receive_json_from()
+        with self.assertRaises(AssertionError):
+            async with self._connect("invalid_token"):
+                pass
 
     async def test_message(self):
         async with self._connect(self.access_token):
@@ -43,7 +41,8 @@ class ChatConsumerTests(TransactionTestCase):
             response = await self.communicator.receive_json_from()
             self.assertEqual(
                 response,
-                response | {
+                response
+                | {
                     "type": "chat.message",
                     "user": self.user.username,
                     "is_admin": False,
