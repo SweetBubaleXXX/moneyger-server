@@ -16,13 +16,13 @@ class CacheClearMixin(TestCase):
 
 
 class MockCurrencyConvertorMixin(TestCase):
-    CONVERTION_RATE = Decimal(2)
+    CONVERSION_RATE = Decimal(2)
 
     def setUp(self):
         super().setUp()
         self.converter_mock = MagicMock(CurrencyConverter)
         self.converter_mock.convert.side_effect = (
-            lambda amount, *_: amount * self.CONVERTION_RATE
+            lambda amount, *_: amount * self.CONVERSION_RATE
         )
         services_container.override(CurrencyConverter, self.converter_mock)
 

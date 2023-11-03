@@ -13,7 +13,6 @@ services:
     restart: "no"
     environment:
       DEBUG: True
-      ALLOWED_HOSTS: "*"
     ports:
       - "${PORT:-80}:80"
 
@@ -21,6 +20,8 @@ services:
     extends:
       file: docker-compose.yml
       service: celery_worker
+    environment:
+      DEBUG: True
     command: celery -A moneymanager worker --loglevel INFO --autoscale 2,1
     restart: "no"
     volumes:

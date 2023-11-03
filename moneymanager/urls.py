@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-api_urls = [
+_api_urls = [
     path("__debug__/", include("debug_toolbar.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
@@ -31,4 +31,4 @@ api_urls = [
     ),
 ]
 
-urlpatterns = [path("api/", include(api_urls))]
+urlpatterns = [path("api/", include(_api_urls))]

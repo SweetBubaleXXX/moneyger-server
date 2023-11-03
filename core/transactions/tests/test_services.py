@@ -14,7 +14,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMi
         total = compute_total([], CurrencyCode.RUB)
         self.assertEqual(total, Decimal(0))
 
-    def test_income_no_convertion(self):
+    def test_income_no_conversion(self):
         """Must return correct positive value."""
         transactions = self.create_transactions_batch(
             30, category=self.income_category, amount=200, currency=CurrencyCode.USD
@@ -22,7 +22,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMi
         total = compute_total(transactions, CurrencyCode.USD)
         self.assertEqual(total, Decimal(60))
 
-    def test_outcome_no_convertion(self):
+    def test_outcome_no_conversion(self):
         """Must return correct negative value."""
         transactions = self.create_transactions_batch(
             50, category=self.outcome_category, amount=300, currency=CurrencyCode.EUR
@@ -30,7 +30,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMi
         total = compute_total(transactions, CurrencyCode.EUR)
         self.assertEqual(total, Decimal(-150))
 
-    def test_income_and_outcome_no_convertion(self):
+    def test_income_and_outcome_no_conversion(self):
         """Must treat income as positive value and outcome as negative."""
         income_transactions = self.create_transactions_batch(
             30, category=self.income_category, amount=200, currency=CurrencyCode.BYN
@@ -43,7 +43,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMi
         )
         self.assertEqual(total, Decimal(-90))
 
-    def test_convertion_called(self):
+    def test_conversion_called(self):
         """Must convert currencies if output currency is different."""
         transactions = self.create_transactions_batch(
             10, category=self.income_category, amount=10, currency=CurrencyCode.USD
@@ -53,7 +53,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMi
             Decimal("0.1"), CurrencyCode.USD, CurrencyCode.BYN
         )
 
-    def test_convertion_multiple_currencies(self):
+    def test_conversion_multiple_currencies(self):
         """Must return correct total of transactions with different currencies."""
         usd_transactions = self.create_transactions_batch(
             10, category=self.income_category, amount=500, currency=CurrencyCode.USD
@@ -62,7 +62,7 @@ class ComputeTotalTestCase(MockCurrencyConvertorMixin, IncomeOutcomeCategoriesMi
             5, category=self.income_category, amount=2000, currency=CurrencyCode.BYN
         )
         total = compute_total(usd_transactions + byn_transactions, CurrencyCode.BYN)
-        self.assertEqual(total, Decimal("50") * self.CONVERTION_RATE + Decimal("100"))
+        self.assertEqual(total, Decimal("50") * self.CONVERSION_RATE + Decimal("100"))
 
 
 class GetAllSubcategoriesTestCase(BaseTestCase):
