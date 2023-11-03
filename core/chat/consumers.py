@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
+from .constants import WebsocketCustomCode
 from .services import MessageCache, SerializedMessage
 
 
@@ -13,10 +14,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.group_name = settings.DEFAULT_CHAT_GROUP
         self.user = self.scope["user"]
-        if isinstance(self.user, AnonymousUser):
-            return await self.close()
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        if isinstance(self.user, AnonymousUser):
+            return await self.close(code=WebsocketCustomCode.UNAUTHORIZED)
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
 
     async def disconnect(self, code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
