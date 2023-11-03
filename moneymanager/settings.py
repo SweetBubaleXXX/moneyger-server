@@ -95,14 +95,23 @@ TEMPLATES = [
 
 ASGI_APPLICATION = "moneymanager.asgi.application"
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": env.list("WEBSOCKET_CHANNEL_LAYERS"),
+WEBSOCKET_CHANNEL_LAYERS = env.list("WEBSOCKET_CHANNEL_LAYERS", default=[])
+
+if WEBSOCKET_CHANNEL_LAYERS:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": WEBSOCKET_CHANNEL_LAYERS,
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 
 
 # Database
