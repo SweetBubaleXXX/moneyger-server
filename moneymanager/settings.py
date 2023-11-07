@@ -39,6 +39,7 @@ ALLOWED_HOSTS = ["*"] if DEBUG else env.list("ALLOWED_HOSTS")
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -92,7 +93,25 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "moneymanager.wsgi.application"
+ASGI_APPLICATION = "moneymanager.asgi.application"
+
+WEBSOCKET_CHANNEL_LAYERS = env.list("WEBSOCKET_CHANNEL_LAYERS", default=[])
+
+if WEBSOCKET_CHANNEL_LAYERS:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": WEBSOCKET_CHANNEL_LAYERS,
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
 
 
 # Database
@@ -264,3 +283,7 @@ ALFA_BANK_NATIONAL_RATES_URL = env(
     "ALFA_BANK_NATIONAL_RATES_URL",
     default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",
 )
+
+DEFAULT_CHAT_GROUP = "public_chat"
+
+CHAT_CACHE_SIZE_LIMIT = 100
