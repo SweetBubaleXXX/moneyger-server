@@ -4,38 +4,29 @@ from os import urandom
 from typing import TypedDict
 
 from django.conf import settings
-from django.contrib.auth.models import User
+
+from accounts.models import Account
 
 from .producer import Producer
 
 
-class _UserCredentials(TypedDict):
+class _AccountCredentials(TypedDict):
     account_id: int
     email: str
     token: str
 
 
-class UserCreatedProducer(Producer):
-    def _publish(self, message: User) -> None:
+class UsersProducer(Producer):
+    def register_account(self, account: Account) -> None:
         auth_token = binascii.hexlify(
             urandom(settings.NOTIFICATIONS_SERVICE_TOKEN_LENGTH)
         ).decode()
-        credentials = _UserCredentials(
-            account_id=message.account_id,
-            email=message.email,
+        credentials = _AccountCredentials(
+            account_id=account.id,
+            email=account.email,
             token=auth_token,
         )
-        self.channel.basic_publish(
-            self.exchange.name,
-            routing_key="user.event.created",
-            body=json.dumps(credentials),
-        )
+        self.publish("user.event.created", json.dumps(credentials))
 
-
-class UserDeletedProducer(Producer):
-    def _publish(self, message: int) -> None:
-        self.channel.basic_publish(
-            self.exchange.name,
-            routing_key="user.event.deleted",
-            body=message,
-        )
+    def delete_account(self, account_id: int) -> None:
+        self.publish("user.event.deleted", account_id)

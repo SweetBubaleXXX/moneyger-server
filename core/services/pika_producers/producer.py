@@ -1,7 +1,6 @@
 import logging
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar
+from typing import AnyStr, Literal, TypeVar
 
 import pika
 
@@ -15,7 +14,7 @@ class ExchangeConfig:
     durable: bool = True
 
 
-class Producer(Generic[T], metaclass=ABCMeta):
+class Producer:
     def __init__(
         self,
         connection_params: pika.ConnectionParameters,
@@ -30,12 +29,8 @@ class Producer(Generic[T], metaclass=ABCMeta):
             durable=exchange.durable,
         )
 
-    def send(self, message: T) -> None:
+    def publish(self, routing_key: str, body: AnyStr) -> None:
         try:
-            self._publish(message)
+            self.channel.basic_publish(self.exchange.name, routing_key, body)
         except Exception:
             logging.exception("Exception occurred while publishing message")
-
-    @abstractmethod
-    def _publish(self, message: T) -> None:
-        ...
