@@ -284,6 +284,10 @@ ALFA_BANK_NATIONAL_RATES_URL = env(
     default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",
 )
 
+NOTIFICATIONS_SERVICE_URL = env("NOTIFICATIONS_SERVICE_URL")
+
+NOTIFICATIONS_SERVICE_TOKEN_LENGTH = 32
+
 DEFAULT_CHAT_GROUP = "public_chat"
 
 CHAT_CACHE_SIZE_LIMIT = 100

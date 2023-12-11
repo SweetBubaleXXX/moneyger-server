@@ -6,8 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
+from ..services.messages import MessageCache, SerializedMessage
 from .constants import WebsocketCustomCode
-from .services import MessageCache, SerializedMessage
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):

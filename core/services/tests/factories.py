@@ -2,7 +2,7 @@ from uuid import uuid4
 
 import factory
 
-from ..services import SerializedMessage
+from ..messages import SerializedMessage
 
 
 class MessageFactory(factory.Factory):
