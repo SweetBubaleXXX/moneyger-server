@@ -45,7 +45,7 @@ class TransactionsProducer(Producer):
         self._send_transactions("transaction.event.updated", transactions)
 
     def delete_transactions(self, transactions: Collection[int]) -> None:
-        self.publish("transaction.event.deleted", json.dumps(transactions))
+        self.send("transaction.event.deleted", json.dumps(transactions))
 
     def _send_transactions(
         self,
@@ -53,4 +53,4 @@ class TransactionsProducer(Producer):
         transactions: Iterable[Transaction],
     ) -> None:
         serialized_transactions = list(map(_serialize_transaction, transactions))
-        self.publish(routing_key, json.dumps(serialized_transactions))
+        self.send(routing_key, json.dumps(serialized_transactions))

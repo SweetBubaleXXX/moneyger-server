@@ -26,7 +26,7 @@ class UsersProducer(Producer):
             email=account.email,
             token=auth_token,
         )
-        self.publish("user.event.created", json.dumps(credentials))
+        self.send("user.event.created", json.dumps(credentials))
 
     def delete_account(self, account_id: int) -> None:
-        self.publish("user.event.deleted", account_id)
+        self.send("user.event.deleted", account_id)
