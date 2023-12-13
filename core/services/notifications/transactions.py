@@ -1,9 +1,8 @@
 import json
 from typing import Collection, Iterable, Literal, TypedDict
 
-from constants import CurrencyCode
-from transactions.models import Transaction
-
+from core.constants import CurrencyCode
+from core.transactions.models import Transaction
 from moneymanager import services_container
 
 from ..currency import CurrencyConverter
