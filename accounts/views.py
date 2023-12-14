@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from djoser.views import UserViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -8,6 +9,9 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from core.services.notifications.users import UsersProducer
+from moneymanager import services_container
 
 from .utils import set_refresh_token_cookie
 
@@ -49,3 +53,10 @@ class JwtLogoutView(APIView):
         response = Response()
         response.delete_cookie(settings.JWT_REFRESH_TOKEN_COOKIE)
         return response
+
+
+class CustomUserViewSet(UserViewSet):
+    @services_container.inject("users_producer")
+    def perform_destroy(self, instance, users_producer: UsersProducer):
+        super().perform_destroy(instance)
+        users_producer.delete_account(instance.id)

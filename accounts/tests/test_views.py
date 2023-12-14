@@ -56,14 +56,14 @@ class JwtViewsTestCase(TestCase):
         return response
 
 
-class TestUserView(MockPublishersMixin, TestCase):
+class TestUserViewSet(MockPublishersMixin, TestCase):
     def setUp(self):
         super().setUp()
         self.account = AccountFactory.build()
 
     def test_user_registered_signal(self):
         response = self.client.post(
-            "/api/accounts/auth/users/",
+            reverse("users-list"),
             {
                 "username": self.account.username,
                 "email": self.account.email,
@@ -71,5 +71,17 @@ class TestUserView(MockPublishersMixin, TestCase):
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.publisher_mock.add_message.assert_called_once()
+        self.publisher_mock.publish.assert_called_once()
+
+    def test_user_deleted_notification(self):
+        saved_account = AccountFactory()
+        self.client.force_login(saved_account)
+        response = self.client.delete(
+            reverse("users-me"),
+            {"current_password": DEFAULT_ACCOUNT_PASSWORD},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.publisher_mock.add_message.assert_called_once()
         self.publisher_mock.publish.assert_called_once()
