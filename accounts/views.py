@@ -59,4 +59,4 @@ class CustomUserViewSet(UserViewSet):
     @services_container.inject("users_producer")
     def perform_destroy(self, instance, users_producer: UsersProducer):
         super().perform_destroy(instance)
-        users_producer.delete_account(instance.id)
+        users_producer.delete_account(instance.id).send()

@@ -1,11 +1,12 @@
 import json
-from typing import TYPE_CHECKING, Collection, Iterable, Literal, TypedDict
+from typing import TYPE_CHECKING, Collection, Iterable, Literal, Self, TypedDict
 
 from core.constants import CurrencyCode
 from moneymanager import services_container
 
 from ..currency import CurrencyConverter
 from .producer import Producer
+from .publishers import Message
 
 if TYPE_CHECKING:
     from core.transactions.models import Transaction
@@ -39,19 +40,31 @@ def _serialize_transaction(
 
 
 class TransactionsProducer(Producer):
-    def add_transactions(self, transactions: Iterable["Transaction"]) -> None:
-        self._send_transactions("transaction.event.created", transactions)
+    def delete_transactions(self, transactions: Collection[int]) -> Self:
+        self.publisher.add_message(
+            Message(
+                routing_key="transaction.event.deleted",
+                body=json.dumps(transactions),
+            )
+        )
+        return self
 
-    def update_transactions(self, transactions: Iterable["Transaction"]) -> None:
-        self._send_transactions("transaction.event.updated", transactions)
+    def add_transactions(self, transactions: Iterable["Transaction"]) -> Self:
+        return self._add_transactions("transaction.event.created", transactions)
 
-    def delete_transactions(self, transactions: Collection[int]) -> None:
-        self.send("transaction.event.deleted", json.dumps(transactions))
+    def update_transactions(self, transactions: Iterable["Transaction"]) -> Self:
+        return self._add_transactions("transaction.event.updated", transactions)
 
-    def _send_transactions(
+    def _add_transactions(
         self,
         routing_key: str,
         transactions: Iterable["Transaction"],
-    ) -> None:
+    ) -> Self:
         serialized_transactions = list(map(_serialize_transaction, transactions))
-        self.send(routing_key, json.dumps(serialized_transactions))
+        self.publisher.add_message(
+            Message(
+                routing_key,
+                body=json.dumps(serialized_transactions),
+            )
+        )
+        return self

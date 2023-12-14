@@ -11,4 +11,4 @@ def user_registered_receiver(
     users_producer: UsersProducer,
     **kwargs,
 ):
-    users_producer.register_account(user)
+    users_producer.register_account(user).send()
