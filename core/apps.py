@@ -21,9 +21,14 @@ class CoreConfig(AppConfig):
     name = "core"
 
     def ready(self):
-        notifications_service_config[connection.Parameters] = pika.URLParameters(
-            settings.NOTIFICATIONS_SERVICE_URL
-        )
+        if settings.NOTIFICATIONS_SERVICE_URL:
+            notifications_service_config[connection.Parameters] = pika.URLParameters(
+                settings.NOTIFICATIONS_SERVICE_URL
+            )
+        else:
+            notifications_service_config[
+                connection.Parameters
+            ] = pika.ConnectionParameters()
 
         services_container.bind(BaseRates, settings.CURRENCY_RATES_PROVIDER)
         services_container[CurrencyConverter] = CurrencyConverter()
