@@ -4,6 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from core.tests import MockPublishersMixin
+
 from .factories import DEFAULT_ACCOUNT_PASSWORD, AccountFactory
 
 
@@ -52,3 +54,22 @@ class JwtViewsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         return response
+
+
+class TestUserView(MockPublishersMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.account = AccountFactory.build()
+
+    def test_user_registered_signal(self):
+        response = self.client.post(
+            "/api/accounts/auth/users/",
+            {
+                "username": self.account.username,
+                "email": self.account.email,
+                "password": DEFAULT_ACCOUNT_PASSWORD,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.publisher_mock.add_message.assert_called_once()
+        self.publisher_mock.publish.assert_called_once()
