@@ -1,12 +1,14 @@
 import json
-from typing import Collection, Iterable, Literal, TypedDict
+from typing import TYPE_CHECKING, Collection, Iterable, Literal, TypedDict
 
 from core.constants import CurrencyCode
-from core.transactions.models import Transaction
 from moneymanager import services_container
 
 from ..currency import CurrencyConverter
 from .producer import Producer
+
+if TYPE_CHECKING:
+    from core.transactions.models import Transaction
 
 
 class _SerializedTransaction(TypedDict):
@@ -19,7 +21,7 @@ class _SerializedTransaction(TypedDict):
 
 @services_container.inject("currency_converter")
 def _serialize_transaction(
-    transaction: Transaction,
+    transaction: "Transaction",
     currency_converter: CurrencyConverter,
 ) -> _SerializedTransaction:
     usd_amount = currency_converter.convert(
@@ -37,10 +39,10 @@ def _serialize_transaction(
 
 
 class TransactionsProducer(Producer):
-    def add_transactions(self, transactions: Iterable[Transaction]) -> None:
+    def add_transactions(self, transactions: Iterable["Transaction"]) -> None:
         self._send_transactions("transaction.event.created", transactions)
 
-    def update_transactions(self, transactions: Iterable[Transaction]) -> None:
+    def update_transactions(self, transactions: Iterable["Transaction"]) -> None:
         self._send_transactions("transaction.event.updated", transactions)
 
     def delete_transactions(self, transactions: Collection[int]) -> None:
@@ -49,7 +51,7 @@ class TransactionsProducer(Producer):
     def _send_transactions(
         self,
         routing_key: str,
-        transactions: Iterable[Transaction],
+        transactions: Iterable["Transaction"],
     ) -> None:
         serialized_transactions = list(map(_serialize_transaction, transactions))
         self.send(routing_key, json.dumps(serialized_transactions))

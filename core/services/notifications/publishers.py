@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from typing import AnyStr, Literal, Protocol, TypeVar
 
 import pika
+from pika import connection
 from pika.channel import Channel
+
+from moneymanager import notifications_service_config
 
 T = TypeVar("T")
 
@@ -27,7 +30,7 @@ class Message:
 class Publisher(Protocol):
     def __init__(
         self,
-        connection_params: pika.ConnectionParameters,
+        connection_params: connection.Parameters,
         exchange: ExchangeConfig,
     ) -> None:
         ...
@@ -40,9 +43,10 @@ class Publisher(Protocol):
 
 
 class AsyncPublisher:
+    @notifications_service_config.inject("connection_params")
     def __init__(
         self,
-        connection_params: pika.ConnectionParameters,
+        connection_params: connection.Parameters,
         exchange: ExchangeConfig,
     ) -> None:
         self._connection_params = connection_params

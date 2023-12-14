@@ -1,13 +1,14 @@
 import binascii
 import json
 from os import urandom
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from django.conf import settings
 
-from accounts.models import Account
-
 from .producer import Producer
+
+if TYPE_CHECKING:
+    from accounts.models import Account
 
 
 class _AccountCredentials(TypedDict):
@@ -17,7 +18,7 @@ class _AccountCredentials(TypedDict):
 
 
 class UsersProducer(Producer):
-    def register_account(self, account: Account) -> None:
+    def register_account(self, account: "Account") -> None:
         auth_token = binascii.hexlify(
             urandom(settings.NOTIFICATIONS_SERVICE_TOKEN_LENGTH)
         ).decode()
