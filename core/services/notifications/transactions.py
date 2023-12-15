@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from operator import itemgetter
 from typing import TYPE_CHECKING, Collection, Iterable, Literal, Self, TypedDict
 
 from core.constants import CurrencyCode
@@ -66,10 +67,10 @@ class TransactionsProducer(Producer):
         return self
 
     def send(self) -> None:
-        for routing_key, messages in self.buffer_queues.items():
-            if messages:
-                self.publisher.add_message(
-                    Message(routing_key, json.dumps(messages)),
-                )
+        non_empty_queues = filter(itemgetter(1), self.buffer_queues.items())
+        for routing_key, transactions in non_empty_queues:
+            self.publisher.add_message(
+                Message(routing_key, json.dumps(transactions)),
+            )
         self.buffer_queues.clear()
         super().send()
