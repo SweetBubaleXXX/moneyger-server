@@ -1,4 +1,5 @@
 import csv
+from collections import deque
 from collections.abc import Iterable
 from dataclasses import asdict
 from typing import Generator
@@ -50,21 +51,24 @@ def json_response(result: list) -> Response:
     )
 
 
-def add_categories_to_account(categories: list, context: CategoryImportContext):
-    if not categories:
-        return
-    serializer = CategoryJsonSerializer(
-        data=categories,
-        context=asdict(context),
-        many=True,
-    )
-    serializer.is_valid(raise_exception=True)
-    created_categories = serializer.save()
-    for category_data, category_instance in zip(categories, created_categories):
-        add_categories_to_account(
-            category_data["subcategories"],
-            CategoryImportContext(
-                account=context.account,
-                parent_category=category_instance,
-            ),
+def add_categories_to_account(primary_categories: list, context: CategoryImportContext):
+    categories_import_stack = deque([(primary_categories, context)])
+    while categories_import_stack:
+        categories, categories_context = categories_import_stack.pop()
+        serializer = CategoryJsonSerializer(
+            data=categories,
+            context=asdict(categories_context),
+            many=True,
         )
+        serializer.is_valid(raise_exception=True)
+        created_categories = serializer.save()
+        for category_data, instance in zip(categories, created_categories):
+            categories_import_stack.append(
+                (
+                    category_data["subcategories"],
+                    CategoryImportContext(
+                        account=categories_context.account,
+                        parent_category=instance,
+                    ),
+                )
+            )
