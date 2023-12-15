@@ -127,7 +127,7 @@ class AsyncPublisher:
             app_id="moneyger-server",
         )
         while self._message_queue:
-            message = self._message_queue.pop()
+            message = self._message_queue.popleft()
             self._channel.basic_publish(
                 self._exchange.name,
                 message.routing_key,

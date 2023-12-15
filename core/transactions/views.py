@@ -3,6 +3,9 @@ from rest_framework import filters, generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from core.services.notifications.transactions import TransactionsProducer
+from moneymanager import services_container
+
 from . import services, utils
 from .filters import TransactionCategoryFilter, TransactionFilter
 from .permissions import IsOwnAccount
@@ -91,13 +94,20 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         return self._paginated_response(transactions.order_by("-transaction_time"))
 
     @transactions.mapping.post
-    def add_transaction(self, request, category_id=None):
+    @services_container.inject("transactions_producer")
+    def add_transaction(
+        self,
+        request,
+        transactions_producer: TransactionsProducer,
+        category_id=None,
+    ):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(
             account=request.user,
             category=self.get_object(),
         )
+        transactions_producer.send()
         return Response(serializer.data)
 
     @action(
@@ -139,6 +149,15 @@ class TransactionDetailView(
     TransactionViewMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     serializer_class = TransactionUpdateSerializer
+
+    @services_container.inject("transactions_producer")
+    def perform_update(
+        self,
+        serializer,
+        transactions_producer: TransactionsProducer,
+    ):
+        super().perform_update(serializer)
+        transactions_producer.send()
 
 
 class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):

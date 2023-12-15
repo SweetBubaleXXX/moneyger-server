@@ -1,7 +1,9 @@
 import json
+from collections import defaultdict
 from typing import TYPE_CHECKING, Collection, Iterable, Literal, Self, TypedDict
 
 from core.constants import CurrencyCode
+from core.services.notifications.publishers import Publisher
 from moneymanager import services_container
 
 from ..currency import CurrencyConverter
@@ -35,18 +37,17 @@ def _serialize_transaction(
         account_id=transaction.account.id,
         transaction_type=transaction.category.transaction_type,
         amount=str(usd_amount),
-        transaction_time=transaction.transaction_time,
+        transaction_time=transaction.transaction_time.isoformat(),
     )
 
 
 class TransactionsProducer(Producer):
+    def __init__(self, publisher: Publisher) -> None:
+        super().__init__(publisher)
+        self.buffer_queues: dict[str, list] = defaultdict(list)
+
     def delete_transactions(self, transactions: Collection[int]) -> Self:
-        self.publisher.add_message(
-            Message(
-                routing_key="transaction.event.deleted",
-                body=json.dumps(transactions),
-            )
-        )
+        self.buffer_queues["transaction.event.deleted"].extend(transactions)
         return self
 
     def add_transactions(self, transactions: Iterable["Transaction"]) -> Self:
@@ -61,10 +62,14 @@ class TransactionsProducer(Producer):
         transactions: Iterable["Transaction"],
     ) -> Self:
         serialized_transactions = list(map(_serialize_transaction, transactions))
-        self.publisher.add_message(
-            Message(
-                routing_key,
-                body=json.dumps(serialized_transactions),
-            )
-        )
+        self.buffer_queues[routing_key].extend(serialized_transactions)
         return self
+
+    def send(self) -> None:
+        for routing_key, messages in self.buffer_queues.items():
+            if messages:
+                self.publisher.add_message(
+                    Message(routing_key, json.dumps(messages)),
+                )
+        self.buffer_queues.clear()
+        super().send()
