@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from core.services.notifications.transactions import TransactionsProducer
@@ -21,3 +21,14 @@ def transaction_added_notification(
         transactions_producer.add_transactions(transactions)
     else:
         transactions_producer.update_transactions(transactions)
+
+
+@receiver(post_delete, sender=Transaction)
+@services_container.inject("transactions_producer")
+def transaction_deleted_notification(
+    sender,
+    instance: Transaction,
+    transactions_producer: TransactionsProducer,
+    **kwargs,
+):
+    transactions_producer.delete_transactions((instance.id,))

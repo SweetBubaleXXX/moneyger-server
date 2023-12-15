@@ -8,10 +8,8 @@ from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework.response import Response
 
-from core.services.notifications.transactions import TransactionsProducer
-from moneymanager import services_container
-
 from ..transactions.models import Transaction
+from ..transactions.services import notify_transaction_changes
 from .serializers import CategoryJsonSerializer, TransacationCsvSerializer
 from .utils import CategoryImportContext, EchoBuffer
 
@@ -77,13 +75,8 @@ def _import_categories(
         )
 
 
-@services_container.inject("transactions_producer")
-def add_categories_to_account(
-    categories: list,
-    context: CategoryImportContext,
-    transactions_producer: TransactionsProducer,
-) -> None:
+def add_categories_to_account(categories: list, context: CategoryImportContext) -> None:
     categories_import_stack = deque([(categories, context)])
     while categories_import_stack:
         _import_categories(categories_import_stack)
-    transactions_producer.send()
+    notify_transaction_changes()

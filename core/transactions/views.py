@@ -3,9 +3,6 @@ from rest_framework import filters, generics, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from core.services.notifications.transactions import TransactionsProducer
-from moneymanager import services_container
-
 from . import services, utils
 from .filters import TransactionCategoryFilter, TransactionFilter
 from .permissions import IsOwnAccount
@@ -15,6 +12,7 @@ from .serializers import (
     TransactionSerializer,
     TransactionUpdateSerializer,
 )
+from .services import notify_transaction_changes
 
 
 class BaseViewMixin:
@@ -44,6 +42,10 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(account=self.request.user)
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
+        notify_transaction_changes()
 
     def paginate_queryset(self, queryset):
         if "all" in self.request.query_params:
@@ -94,20 +96,14 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
         return self._paginated_response(transactions.order_by("-transaction_time"))
 
     @transactions.mapping.post
-    @services_container.inject("transactions_producer")
-    def add_transaction(
-        self,
-        request,
-        transactions_producer: TransactionsProducer,
-        category_id=None,
-    ):
+    def add_transaction(self, request, category_id=None):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(
             account=request.user,
             category=self.get_object(),
         )
-        transactions_producer.send()
+        notify_transaction_changes()
         return Response(serializer.data)
 
     @action(
@@ -150,14 +146,13 @@ class TransactionDetailView(
 ):
     serializer_class = TransactionUpdateSerializer
 
-    @services_container.inject("transactions_producer")
-    def perform_update(
-        self,
-        serializer,
-        transactions_producer: TransactionsProducer,
-    ):
+    def perform_update(self, serializer):
         super().perform_update(serializer)
-        transactions_producer.send()
+        notify_transaction_changes()
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
+        notify_transaction_changes()
 
 
 class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):
