@@ -2,6 +2,9 @@ from dataclasses import asdict
 
 from rest_framework import serializers
 
+from core.services.notifications.transactions import TransactionsProducer
+from moneymanager import services_container
+
 from ..transactions.models import Transaction, TransactionCategory
 from .utils import CategoryImportContext, ParsedCategory
 
@@ -36,8 +39,12 @@ class TransactionJsonSerializer(serializers.ModelSerializer):
         )
 
 
-def _create_transactions(parsed_category: ParsedCategory):
-    return Transaction.objects.bulk_create(
+@services_container.inject("transactions_producer")
+def _create_transactions(
+    parsed_category: ParsedCategory,
+    transactions_producer: TransactionsProducer,
+) -> list[Transaction]:
+    created_transactions = Transaction.objects.bulk_create(
         Transaction(
             account=parsed_category.instance.account,
             category=parsed_category.instance,
@@ -45,6 +52,8 @@ def _create_transactions(parsed_category: ParsedCategory):
         )
         for transaction_data in parsed_category.transactions
     )
+    transactions_producer.add_transactions(created_transactions)
+    return created_transactions
 
 
 class CategoryListJsonSerializer(serializers.ListSerializer):

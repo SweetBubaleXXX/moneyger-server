@@ -8,6 +8,9 @@ from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework.response import Response
 
+from core.services.notifications.transactions import TransactionsProducer
+from moneymanager import services_container
+
 from ..transactions.models import Transaction
 from .serializers import CategoryJsonSerializer, TransacationCsvSerializer
 from .utils import CategoryImportContext, EchoBuffer
@@ -51,24 +54,36 @@ def json_response(result: list) -> Response:
     )
 
 
-def add_categories_to_account(primary_categories: list, context: CategoryImportContext):
-    categories_import_stack = deque([(primary_categories, context)])
-    while categories_import_stack:
-        categories, categories_context = categories_import_stack.pop()
-        serializer = CategoryJsonSerializer(
-            data=categories,
-            context=asdict(categories_context),
-            many=True,
-        )
-        serializer.is_valid(raise_exception=True)
-        created_categories = serializer.save()
-        for category_data, instance in zip(categories, created_categories):
-            categories_import_stack.append(
-                (
-                    category_data["subcategories"],
-                    CategoryImportContext(
-                        account=categories_context.account,
-                        parent_category=instance,
-                    ),
-                )
+def _import_categories(
+    categories_import_stack: deque[tuple[list, CategoryImportContext]]
+) -> None:
+    categories, context = categories_import_stack.pop()
+    serializer = CategoryJsonSerializer(
+        data=categories,
+        context=asdict(context),
+        many=True,
+    )
+    serializer.is_valid(raise_exception=True)
+    created_categories = serializer.save()
+    for category_data, instance in zip(categories, created_categories):
+        categories_import_stack.append(
+            (
+                category_data["subcategories"],
+                CategoryImportContext(
+                    account=context.account,
+                    parent_category=instance,
+                ),
             )
+        )
+
+
+@services_container.inject("transactions_producer")
+def add_categories_to_account(
+    categories: list,
+    context: CategoryImportContext,
+    transactions_producer: TransactionsProducer,
+) -> None:
+    categories_import_stack = deque([(categories, context)])
+    while categories_import_stack:
+        _import_categories(categories_import_stack)
+    transactions_producer.send()

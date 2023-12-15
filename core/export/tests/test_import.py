@@ -55,6 +55,13 @@ class ImportJsonViewTests(BaseViewTestCase):
         ).count()
         self.assertEqual(subcategories_count, 6)
 
+    def test_transactions_added_notification(self):
+        """Imported transactions must be sent to notifications service."""
+        response = self.client.post(reverse("import-json"), EXPORTED_CATEGORIES)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.publisher_mock.add_message.assert_called_once()
+        self.publisher_mock.publish.assert_called_once()
+
     def test_queries_number(self):
         """Correct number of queries must be performed."""
         self._test_post_queries_number(5, reverse("import-json"), EXPORTED_CATEGORIES)
