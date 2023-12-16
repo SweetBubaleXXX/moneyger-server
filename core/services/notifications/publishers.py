@@ -23,7 +23,7 @@ class ExchangeConfig:
 
 
 @dataclass
-class Message:
+class PublisherMessage:
     routing_key: str
     body: str | bytes
 
@@ -36,7 +36,7 @@ class Publisher(Protocol):
     ) -> None:
         ...
 
-    def add_message(self, message: Message) -> None:
+    def add_message(self, message: PublisherMessage) -> None:
         ...
 
     def publish(self) -> None:
@@ -54,11 +54,11 @@ class AsynchronousPublisher:
     ) -> None:
         self._connection_params = connection_params
         self._exchange = exchange
-        self._message_queue: deque[Message] = deque()
+        self._message_queue: deque[PublisherMessage] = deque()
         self._connection: pika.BaseConnection | None = None
         self._channel: Channel | None = None
 
-    def add_message(self, message: Message) -> None:
+    def add_message(self, message: PublisherMessage) -> None:
         self._message_queue.append(message)
 
     def publish(self) -> None:

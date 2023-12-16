@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Self, TypedDict
 from django.conf import settings
 
 from .producer import Producer
-from .publishers import Message
+from .publishers import PublisherMessage
 
 if TYPE_CHECKING:
     from accounts.models import Account
@@ -29,7 +29,7 @@ class UsersProducer(Producer):
             token=auth_token,
         )
         self.publisher.add_message(
-            Message(
+            PublisherMessage(
                 routing_key="user.event.created",
                 body=json.dumps(credentials),
             )
@@ -38,7 +38,7 @@ class UsersProducer(Producer):
 
     def delete_account(self, account_id: int) -> Self:
         self.publisher.add_message(
-            Message(
+            PublisherMessage(
                 routing_key="user.event.deleted",
                 body=account_id,
             )

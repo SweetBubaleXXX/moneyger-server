@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from ..services.messages import MessageCache, SerializedMessage
 from .constants import WebsocketCustomCode
+from .services import notify_new_message
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -33,6 +34,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             **user_info,
         )
         MessageCache(self.group_name).push(message)
+        await notify_new_message(message)
         await self.channel_layer.group_send(
             self.group_name,
             {

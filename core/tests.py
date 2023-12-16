@@ -2,7 +2,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import SimpleTestCase
 
 from moneymanager import services_container
 
@@ -12,13 +12,13 @@ from .services.notifications.transactions import TransactionsProducer
 from .services.notifications.users import UsersProducer
 
 
-class CacheClearMixin(TestCase):
+class CacheClearMixin(SimpleTestCase):
     def setUp(self):
         super().setUp()
         self.addCleanup(cache.clear)
 
 
-class ContainerResetOverrideMixin(TestCase):
+class ContainerResetOverrideMixin(SimpleTestCase):
     def tearDown(self):
         super().tearDown()
         services_container.reset_override()
@@ -47,7 +47,7 @@ class MockPublishersMixin(ContainerResetOverrideMixin):
         services_container.override(UsersProducer, UsersProducer(self.publisher_mock))
 
 
-class StopPatchersMixin(TestCase):
+class StopPatchersMixin(SimpleTestCase):
     def setUp(self):
         super().setUp()
         self.addCleanup(patch.stopall)

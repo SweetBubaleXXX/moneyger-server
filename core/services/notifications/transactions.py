@@ -10,7 +10,7 @@ from moneymanager import services_container
 
 from ..currency import CurrencyConverter
 from .producer import Producer
-from .publishers import Message
+from .publishers import PublisherMessage
 
 if TYPE_CHECKING:
     from core.transactions.models import Transaction
@@ -75,7 +75,7 @@ class TransactionsProducer(Producer):
             non_empty_queues = filter(itemgetter(1), self.buffer_queues.items())
             for routing_key, transactions in non_empty_queues:
                 self.publisher.add_message(
-                    Message(routing_key, json.dumps(transactions)),
+                    PublisherMessage(routing_key, json.dumps(transactions)),
                 )
             self.buffer_queues.clear()
         super().send()
