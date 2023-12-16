@@ -1,4 +1,5 @@
 import json
+import threading
 from collections import defaultdict
 from operator import itemgetter
 from typing import TYPE_CHECKING, Collection, Iterable, Literal, Self, TypedDict
@@ -46,9 +47,11 @@ class TransactionsProducer(Producer):
     def __init__(self, publisher: Publisher) -> None:
         super().__init__(publisher)
         self.buffer_queues: dict[str, list] = defaultdict(list)
+        self._lock = threading.Lock()
 
     def delete_transactions(self, transactions: Collection[int]) -> Self:
-        self.buffer_queues["transaction.event.deleted"].extend(transactions)
+        with self._lock:
+            self.buffer_queues["transaction.event.deleted"].extend(transactions)
         return self
 
     def add_transactions(self, transactions: Iterable["Transaction"]) -> Self:
@@ -63,14 +66,16 @@ class TransactionsProducer(Producer):
         transactions: Iterable["Transaction"],
     ) -> Self:
         serialized_transactions = list(map(_serialize_transaction, transactions))
-        self.buffer_queues[routing_key].extend(serialized_transactions)
+        with self._lock:
+            self.buffer_queues[routing_key].extend(serialized_transactions)
         return self
 
     def send(self) -> None:
-        non_empty_queues = filter(itemgetter(1), self.buffer_queues.items())
-        for routing_key, transactions in non_empty_queues:
-            self.publisher.add_message(
-                Message(routing_key, json.dumps(transactions)),
-            )
-        self.buffer_queues.clear()
+        with self._lock:
+            non_empty_queues = filter(itemgetter(1), self.buffer_queues.items())
+            for routing_key, transactions in non_empty_queues:
+                self.publisher.add_message(
+                    Message(routing_key, json.dumps(transactions)),
+                )
+            self.buffer_queues.clear()
         super().send()
