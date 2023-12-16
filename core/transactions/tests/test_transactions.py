@@ -138,6 +138,16 @@ class TransactionDetailsViewTests(BaseViewTestCase):
         with self.assertRaises(Transaction.DoesNotExist):
             Transaction.objects.get(pk=transaction.id)
 
+    def test_deleted_transaction_notification(self):
+        """Deleted transaction id must be sent to notifications service."""
+        transaction = self.create_transaction()
+        response = self.client.delete(
+            reverse("transaction-detail", args=(transaction.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.publisher_mock.add_message.assert_called()
+        self.publisher_mock.publish.assert_called_once()
+
 
 class CategorizedTransactionViewTests(IncomeOutcomeCategoriesMixin, BaseViewTestCase):
     def test_list_transactions(self):
