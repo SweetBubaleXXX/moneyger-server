@@ -1,10 +1,11 @@
 import logging
 from collections import deque
 from dataclasses import dataclass
-from typing import AnyStr, Literal, Protocol, TypeVar
+from typing import Literal, Protocol, Type, TypeVar
 
 import pika
 from pika import connection
+from pika.adapters.asyncio_connection import AsyncioConnection
 from pika.channel import Channel
 
 from moneymanager import notifications_service_config
@@ -24,7 +25,7 @@ class ExchangeConfig:
 @dataclass
 class Message:
     routing_key: str
-    body: AnyStr
+    body: str | bytes
 
 
 class Publisher(Protocol):
@@ -42,7 +43,9 @@ class Publisher(Protocol):
         ...
 
 
-class AsyncPublisher:
+class AsynchronousPublisher:
+    _connection_class: Type[pika.BaseConnection] = pika.SelectConnection
+
     @notifications_service_config.inject("connection_params")
     def __init__(
         self,
@@ -52,7 +55,7 @@ class AsyncPublisher:
         self._connection_params = connection_params
         self._exchange = exchange
         self._message_queue: deque[Message] = deque()
-        self._connection: pika.SelectConnection | None = None
+        self._connection: pika.BaseConnection | None = None
         self._channel: Channel | None = None
 
     def add_message(self, message: Message) -> None:
@@ -68,8 +71,8 @@ class AsyncPublisher:
             if self._connection and not self._connection.is_closed:
                 self._connection.ioloop.start()
 
-    def _create_connection(self) -> pika.SelectConnection:
-        self._connection = pika.SelectConnection(
+    def _create_connection(self) -> pika.BaseConnection:
+        self._connection = self._connection_class(
             self._connection_params,
             on_open_callback=self._on_connection_open,
             on_open_error_callback=self._on_connection_open_error,
@@ -84,16 +87,24 @@ class AsyncPublisher:
         if self._connection and not self._connection.is_closed:
             self._connection.close()
 
-    def _on_connection_open(self, connection: pika.SelectConnection) -> None:
+    def _on_connection_open(self, connection: pika.BaseConnection) -> None:
         logger.info("Connection opened")
         connection.channel(on_open_callback=self._on_channel_open)
 
-    def _on_connection_open_error(self, connection: pika.SelectConnection, err) -> None:
-        logger.error("Failed to open connection: %s", err)
+    def _on_connection_open_error(
+        self,
+        connection: pika.BaseConnection,
+        exc: BaseException,
+    ) -> None:
+        logger.error("Failed to open connection: %s", exc)
         connection.ioloop.stop()
 
-    def _on_connection_closed(self, connection: pika.SelectConnection, reason) -> None:
-        logger.info("Connection closed: %s", reason)
+    def _on_connection_closed(
+        self,
+        connection: pika.BaseConnection,
+        exc: BaseException,
+    ) -> None:
+        logger.info("Connection closed: %s", exc)
         self._channel = None
         connection.ioloop.stop()
 
@@ -136,3 +147,7 @@ class AsyncPublisher:
             )
         logger.info("Messages published")
         self._close_connection()
+
+
+class AsyncioPublisher(AsynchronousPublisher):
+    _connection_class = AsyncioConnection

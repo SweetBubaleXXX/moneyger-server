@@ -10,7 +10,7 @@ from moneymanager import (
 )
 
 from .services.currency import CurrencyConverter
-from .services.notifications.publishers import AsyncPublisher, ExchangeConfig
+from .services.notifications.publishers import AsynchronousPublisher, ExchangeConfig
 from .services.notifications.transactions import TransactionsProducer
 from .services.notifications.users import UsersProducer
 from .services.rates_providers import BaseRates
@@ -29,7 +29,7 @@ def _wire_containers():
     services_container.bind(BaseRates, settings.CURRENCY_RATES_PROVIDER)
     services_container[CurrencyConverter] = CurrencyConverter()
     services_container[TransactionsProducer] = TransactionsProducer(
-        AsyncPublisher(
+        AsynchronousPublisher(
             exchange=ExchangeConfig(
                 name="transactions_exchange",
                 exchange_type="topic",
@@ -38,7 +38,7 @@ def _wire_containers():
         )
     )
     services_container[UsersProducer] = UsersProducer(
-        AsyncPublisher(
+        AsynchronousPublisher(
             exchange=ExchangeConfig(
                 name="users_exchange",
                 exchange_type="topic",
