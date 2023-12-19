@@ -7,6 +7,7 @@ from django.test import SimpleTestCase
 from moneymanager import services_container
 
 from .services.currency import CurrencyConverter
+from .services.notifications.messages import MessagesProducer
 from .services.notifications.publishers import Publisher
 from .services.notifications.transactions import TransactionsProducer
 from .services.notifications.users import UsersProducer
@@ -45,6 +46,10 @@ class MockPublishersMixin(ContainerResetOverrideMixin):
             TransactionsProducer(self.publisher_mock),
         )
         services_container.override(UsersProducer, UsersProducer(self.publisher_mock))
+        services_container.override(
+            MessagesProducer,
+            MessagesProducer(self.publisher_mock),
+        )
 
 
 class StopPatchersMixin(SimpleTestCase):
