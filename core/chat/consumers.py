@@ -34,7 +34,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             **user_info,
         )
         MessageCache(self.group_name).push(message)
-        notify_new_message(message)
         await self.channel_layer.group_send(
             self.group_name,
             {
@@ -42,6 +41,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 **message,
             },
         )
+        notify_new_message(message)
 
     async def chat_message(self, event):
         await self.send_json(event)
