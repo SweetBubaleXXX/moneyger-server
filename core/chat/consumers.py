@@ -17,7 +17,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         self.user = self.scope["user"]
         await self.accept()
         if isinstance(self.user, AnonymousUser):
-            return await self.close(code=WebsocketCustomCode.UNAUTHORIZED)
+            return await self.close(code=WebsocketCustomCode.UNAUTHORIZED.value)
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
     async def disconnect(self, code):

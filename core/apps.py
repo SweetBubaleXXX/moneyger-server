@@ -11,11 +11,7 @@ from moneymanager import (
 
 from .services.currency import CurrencyConverter
 from .services.notifications.messages import MessagesProducer
-from .services.notifications.publishers import (
-    AsynchronousPublisher,
-    AsyncioPublisher,
-    ExchangeConfig,
-)
+from .services.notifications.publishers import AsynchronousPublisher, ExchangeConfig
 from .services.notifications.transactions import TransactionsProducer
 from .services.notifications.users import UsersProducer
 from .services.rates_providers import BaseRates
@@ -52,7 +48,7 @@ def _wire_containers():
         )
     )
     services_container[MessagesProducer] = MessagesProducer(
-        AsyncioPublisher(
+        AsynchronousPublisher(
             exchange=ExchangeConfig(
                 name="messages_exchange",
                 exchange_type="topic",

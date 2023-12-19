@@ -5,7 +5,6 @@ from typing import Literal, Protocol, Type, TypeVar
 
 import pika
 from pika import connection
-from pika.adapters.asyncio_connection import AsyncioConnection
 from pika.channel import Channel
 
 from moneymanager import notifications_service_config
@@ -147,7 +146,3 @@ class AsynchronousPublisher:
             )
         logger.info("Messages published")
         self._close_connection()
-
-
-class AsyncioPublisher(AsynchronousPublisher):
-    _connection_class = AsyncioConnection
