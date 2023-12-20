@@ -12,8 +12,9 @@ from moneymanager import (
 from .services.currency import CurrencyConverter
 from .services.notifications.messages import MessagesProducer
 from .services.notifications.publishers import AsynchronousPublisher, ExchangeConfig
+from .services.notifications.rpc import RpcClient
 from .services.notifications.transactions import TransactionsProducer
-from .services.notifications.users import UsersProducer
+from .services.notifications.users import UsersProducer, UsersRpcService
 from .services.rates_providers import BaseRates
 
 
@@ -27,6 +28,12 @@ def _wire_containers():
             connection.Parameters
         ] = pika.ConnectionParameters()
 
+    users_exchange = ExchangeConfig(
+        name="users_exchange",
+        exchange_type="topic",
+        durable=True,
+    )
+
     services_container.bind(BaseRates, settings.CURRENCY_RATES_PROVIDER)
     services_container[CurrencyConverter] = CurrencyConverter()
     services_container[TransactionsProducer] = TransactionsProducer(
@@ -39,13 +46,7 @@ def _wire_containers():
         )
     )
     services_container[UsersProducer] = UsersProducer(
-        AsynchronousPublisher(
-            exchange=ExchangeConfig(
-                name="users_exchange",
-                exchange_type="topic",
-                durable=True,
-            ),
-        )
+        AsynchronousPublisher(exchange=users_exchange)
     )
     services_container[MessagesProducer] = MessagesProducer(
         AsynchronousPublisher(
@@ -55,6 +56,9 @@ def _wire_containers():
                 durable=True,
             )
         )
+    )
+    services_container[UsersRpcService] = UsersRpcService(
+        RpcClient(exchange=users_exchange)
     )
 
     lookup_depth_container[int] = settings.DEFAULT_LOOKUP_DEPTH

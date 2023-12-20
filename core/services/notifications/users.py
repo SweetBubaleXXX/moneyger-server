@@ -51,7 +51,7 @@ class UsersProducer(Producer):
 
 
 class UsersRpcService(RpcService):
-    def get_account_token(self, account_id: int) -> str:
+    def get_account_credentials(self, account_id: int) -> _AccountCredentials:
         with self.client.connection() as connection:
             response = connection.call(
                 PublisherMessage(
@@ -59,8 +59,7 @@ class UsersRpcService(RpcService):
                     body=str(account_id),
                 )
             )
-            account_credentials = self._parse_credentials_response(response)
-            return account_credentials.token
+            return self._parse_credentials_response(response)
 
     def _parse_credentials_response(self, response: bytes) -> _AccountCredentials:
         deserialized_response = json.loads(response)

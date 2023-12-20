@@ -10,9 +10,10 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from core.services.notifications.users import UsersProducer
-from moneymanager import services_container
-
+from .services import (
+    create_notifications_service_token,
+    unsubscribe_user_from_notifications,
+)
 from .utils import set_refresh_token_cookie
 
 
@@ -56,7 +57,14 @@ class JwtLogoutView(APIView):
 
 
 class CustomUserViewSet(UserViewSet):
-    @services_container.inject("users_producer")
-    def perform_destroy(self, instance, users_producer: UsersProducer):
+    def perform_destroy(self, instance):
         super().perform_destroy(instance)
-        users_producer.delete_account(instance.id).send()
+        unsubscribe_user_from_notifications(instance)
+
+
+class NotificationsServiceAuth(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs) -> Response:
+        access_token = create_notifications_service_token(request.user.id)
+        return Response({"access_token": access_token})
