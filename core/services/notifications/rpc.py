@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from typing import Iterator, Self, TypeAlias, TypeVar
+from typing import Iterator, Self, TypeAlias
 from uuid import uuid4
 
 import pika
@@ -11,8 +11,6 @@ from moneymanager import notifications_service_config
 
 from .publishers import ExchangeConfig, PublisherMessage
 
-_T_co = TypeVar("_T_co", covariant=True)
-_U = TypeVar("_U")
 _SECONDS: TypeAlias = int
 
 _RESPONSE_TIMEOUT: _SECONDS = 10

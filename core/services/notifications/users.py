@@ -66,6 +66,6 @@ class UsersRpcService(RpcService):
         deserialized_response = json.loads(response)
         success = deserialized_response.get("success", False)
         if not success:
-            raise ...
+            raise Exception("Unsuccessful RPC call result")
         result = deserialized_response.get("result")
         return _AccountCredentials(**result)
