@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class _AccountCredentials:
+class AccountCredentials:
     account_id: int
     email: str
     token: str
@@ -27,7 +27,7 @@ class UsersProducer(Producer):
         auth_token = binascii.hexlify(
             urandom(settings.NOTIFICATIONS_SERVICE_TOKEN_LENGTH)
         ).decode()
-        credentials = _AccountCredentials(
+        credentials = AccountCredentials(
             account_id=account.id,
             email=account.email,
             token=auth_token,
@@ -51,7 +51,7 @@ class UsersProducer(Producer):
 
 
 class UsersRpcService(RpcService):
-    def get_account_credentials(self, account_id: int) -> _AccountCredentials:
+    def get_account_credentials(self, account_id: int) -> AccountCredentials:
         with self.client.connection() as connection:
             response = connection.call(
                 PublisherMessage(
@@ -61,10 +61,10 @@ class UsersRpcService(RpcService):
             )
             return self._parse_credentials_response(response)
 
-    def _parse_credentials_response(self, response: bytes) -> _AccountCredentials:
+    def _parse_credentials_response(self, response: bytes) -> AccountCredentials:
         deserialized_response = json.loads(response)
         success = deserialized_response.get("success", False)
         if not success:
             raise Exception("Unsuccessful RPC call result")
         result = deserialized_response.get("result")
-        return _AccountCredentials(**result)
+        return AccountCredentials(**result)

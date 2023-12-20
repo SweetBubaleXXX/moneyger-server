@@ -62,7 +62,7 @@ class CustomUserViewSet(UserViewSet):
         unsubscribe_user_from_notifications(instance)
 
 
-class NotificationsServiceAuth(APIView):
+class NotificationsServiceAuthView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs) -> Response:

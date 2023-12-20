@@ -10,7 +10,7 @@ from .services.currency import CurrencyConverter
 from .services.notifications.messages import MessagesProducer
 from .services.notifications.publishers import Publisher
 from .services.notifications.transactions import TransactionsProducer
-from .services.notifications.users import UsersProducer
+from .services.notifications.users import UsersProducer, UsersRpcService
 
 
 class CacheClearMixin(SimpleTestCase):
@@ -41,6 +41,7 @@ class MockPublishersMixin(ContainerResetOverrideMixin):
     def setUp(self):
         super().setUp()
         self.publisher_mock = MagicMock(Publisher)
+        self.users_rpc_mock = MagicMock(UsersRpcService)
         services_container.override(
             TransactionsProducer,
             TransactionsProducer(self.publisher_mock),
@@ -49,6 +50,10 @@ class MockPublishersMixin(ContainerResetOverrideMixin):
         services_container.override(
             MessagesProducer,
             MessagesProducer(self.publisher_mock),
+        )
+        services_container.override(
+            UsersRpcService,
+            self.users_rpc_mock,
         )
 
 

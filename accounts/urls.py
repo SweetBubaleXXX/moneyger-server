@@ -25,5 +25,10 @@ urlpatterns = [
         views.JwtLogoutView.as_view(),
         name="token_logout",
     ),
+    path(
+        "auth/notifications/",
+        views.NotificationsServiceAuthView.as_view(),
+        name="notifications-service-token",
+    ),
     path("webauthn/", include("djoser.webauthn.urls")),
 ]

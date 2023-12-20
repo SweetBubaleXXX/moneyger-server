@@ -1,9 +1,11 @@
+import jwt
 from django.conf import settings
 from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from core.services.notifications.users import AccountCredentials
 from core.tests import MockPublishersMixin
 
 from .factories import DEFAULT_ACCOUNT_PASSWORD, AccountFactory
@@ -85,3 +87,31 @@ class TestUserViewSet(MockPublishersMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.publisher_mock.add_message.assert_called_once()
         self.publisher_mock.publish.assert_called_once()
+
+
+class NotificationsServiceAuthViewTests(MockPublishersMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.account = AccountFactory()
+        self.token_secret = "secret"
+        self.users_rpc_mock.get_account_credentials.return_value = AccountCredentials(
+            account_id=self.account.id,
+            email=self.account.email,
+            token=self.token_secret,
+        )
+
+    def test_get_token_unauthorized(self):
+        response = self.client.get(reverse("notifications-service-token"))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_jwt_token(self):
+        self.client.force_login(self.account)
+        response = self.client.get(reverse("notifications-service-token"))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        jwt_token = response.json()["access_token"]
+        token_payload = jwt.decode(
+            jwt_token,
+            key=self.token_secret,
+            algorithms=["HS256"],
+        )
+        self.assertEqual(token_payload["account_id"], self.account.id)
