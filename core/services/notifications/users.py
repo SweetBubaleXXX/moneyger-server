@@ -1,9 +1,12 @@
 import binascii
 import json
+from dataclasses import asdict, dataclass
 from os import urandom
-from typing import TYPE_CHECKING, Self, TypedDict
+from typing import TYPE_CHECKING, Self
 
 from django.conf import settings
+
+from core.services.notifications.rpc import RpcService
 
 from .producer import Producer
 from .publishers import PublisherMessage
@@ -12,7 +15,8 @@ if TYPE_CHECKING:
     from accounts.models import Account
 
 
-class _AccountCredentials(TypedDict):
+@dataclass
+class _AccountCredentials:
     account_id: int
     email: str
     token: str
@@ -31,7 +35,7 @@ class UsersProducer(Producer):
         self.publisher.add_message(
             PublisherMessage(
                 routing_key="user.event.created",
-                body=json.dumps(credentials),
+                body=json.dumps(asdict(credentials)),
             )
         )
         return self
@@ -44,3 +48,24 @@ class UsersProducer(Producer):
             )
         )
         return self
+
+
+class UsersRpcService(RpcService):
+    def get_account_token(self, account_id: int) -> str:
+        with self.client.connection() as connection:
+            response = connection.call(
+                PublisherMessage(
+                    routing_key="user.request.credentials",
+                    body=str(account_id),
+                )
+            )
+            account_credentials = self._parse_credentials_response(response)
+            return account_credentials.token
+
+    def _parse_credentials_response(self, response: bytes) -> _AccountCredentials:
+        deserialized_response = json.loads(response)
+        success = deserialized_response.get("success", False)
+        if not success:
+            raise ...
+        result = deserialized_response.get("result")
+        return _AccountCredentials(**result)
