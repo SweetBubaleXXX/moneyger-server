@@ -32,8 +32,8 @@ class RpcClient:
         self._response: bytes | None = None
 
     def call(self, request: PublisherMessage) -> bytes:
-        if not all((self._connection, self._channel)):
-            raise RuntimeError("Connection and channel aren't ready")
+        if not (self._connection and self._connection.is_open):
+            raise RuntimeError("Connection is not open")
         self._correlation_id = str(uuid4())
         self._channel.basic_publish(
             exchange=self._exchange.name,
@@ -50,27 +50,24 @@ class RpcClient:
         return self._response
 
     @contextmanager
-    def connection(self) -> Iterator[Self]:
-        if self._connection:
-            yield self
-        else:
-            yield next(self._connect_client())
-
-    def _connect_client(self) -> Iterator[Self]:
-        self._connection = pika.BlockingConnection(self._connection_params)
+    def connect(self) -> Iterator[Self]:
         try:
-            self._channel = self._connection.channel()
-            self._declare_exchange()
-            self._declare_callback_queue()
-            self._channel.basic_consume(
-                queue=self._callback_queue,
-                on_message_callback=self._on_response,
-                auto_ack=True,
-            )
-            yield self
+            yield self._create_connection()
         finally:
-            if self._connection.is_open:
+            if self._connection and self._connection.is_open:
                 self._connection.close()
+
+    def _create_connection(self) -> Self:
+        self._connection = pika.BlockingConnection(self._connection_params)
+        self._channel = self._connection.channel()
+        self._declare_exchange()
+        self._declare_callback_queue()
+        self._channel.basic_consume(
+            queue=self._callback_queue,
+            on_message_callback=self._on_response,
+            auto_ack=True,
+        )
+        return self
 
     def _declare_exchange(self) -> None:
         self._channel.exchange_declare(
@@ -97,4 +94,4 @@ class RpcClient:
 
 class RpcService:
     def __init__(self, rpc_client: RpcClient) -> None:
-        self.client = rpc_client
+        self._client = rpc_client

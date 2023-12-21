@@ -52,7 +52,7 @@ class UsersProducer(Producer):
 
 class UsersRpcService(RpcService):
     def get_account_credentials(self, account_id: int) -> AccountCredentials:
-        with self.client.connection() as connection:
+        with self._client.connect() as connection:
             response = connection.call(
                 PublisherMessage(
                     routing_key="user.request.credentials",
