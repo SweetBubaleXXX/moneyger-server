@@ -45,9 +45,7 @@ class RpcClient:
             body=request.body,
         )
         self._connection.process_data_events(time_limit=_RESPONSE_TIMEOUT)
-        if not self._response:
-            raise TypeError("Got None response")
-        return self._response
+        return self._get_response()
 
     @contextmanager
     def connect(self) -> Iterator[Self]:
@@ -90,6 +88,13 @@ class RpcClient:
         if self._correlation_id != properties.correlation_id:
             return
         self._response = body
+
+    def _get_response(self) -> bytes:
+        response = self._response
+        self._response = None
+        if not response:
+            raise TypeError("No response for RPC call")
+        return response
 
 
 class RpcService:

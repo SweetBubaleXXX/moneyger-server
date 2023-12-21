@@ -1,7 +1,7 @@
 import logging
 from collections import deque
 from dataclasses import dataclass
-from typing import Literal, Protocol, Type, TypeVar
+from typing import Literal, Protocol, TypeVar
 
 import pika
 from pika import connection
@@ -43,7 +43,7 @@ class Publisher(Protocol):
 
 
 class AsynchronousPublisher:
-    _connection_class: Type[pika.BaseConnection] = pika.SelectConnection
+    _connection_class: type[pika.BaseConnection] = pika.SelectConnection
 
     @notifications_service_config.inject("connection_params")
     def __init__(
