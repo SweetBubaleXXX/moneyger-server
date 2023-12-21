@@ -44,8 +44,7 @@ class RpcClient:
             ),
             body=request.body,
         )
-        self._connection.process_data_events(time_limit=_RESPONSE_TIMEOUT)
-        return self._get_response()
+        return self._wait_for_response()
 
     @contextmanager
     def connect(self) -> Iterator[Self]:
@@ -89,14 +88,18 @@ class RpcClient:
             return
         self._response = body
 
-    def _get_response(self) -> bytes:
+    def _wait_for_response(self) -> bytes:
+        self._connection.process_data_events(time_limit=_RESPONSE_TIMEOUT)
         response = self._response
-        self._response = None
         if not response:
             raise TypeError("No response for RPC call")
+        self._response = None
         return response
 
 
-class RpcService:
-    def __init__(self, rpc_client: RpcClient) -> None:
-        self._client = rpc_client
+class RpcClientFactory:
+    def __init__(self, exchange: ExchangeConfig) -> None:
+        self._exchange = exchange
+
+    def __call__(self) -> RpcClient:
+        return RpcClient(exchange=self._exchange)

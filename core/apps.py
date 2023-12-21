@@ -12,7 +12,7 @@ from moneymanager import (
 from .services.currency import CurrencyConverter
 from .services.notifications.messages import MessagesProducer
 from .services.notifications.publishers import AsynchronousPublisher, ExchangeConfig
-from .services.notifications.rpc import RpcClient
+from .services.notifications.rpc import RpcClientFactory
 from .services.notifications.transactions import TransactionsProducer
 from .services.notifications.users import UsersProducer, UsersRpcService
 from .services.rates_providers import BaseRates
@@ -58,7 +58,7 @@ def _wire_containers():
         )
     )
     services_container[UsersRpcService] = UsersRpcService(
-        RpcClient(exchange=users_exchange)
+        RpcClientFactory(exchange=users_exchange)
     )
 
     lookup_depth_container[int] = settings.DEFAULT_LOOKUP_DEPTH

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Self
 
 from django.conf import settings
 
-from core.services.notifications.rpc import RpcService
+from core.services.notifications.rpc import RpcClientFactory
 
 from .producer import Producer
 from .publishers import PublisherMessage
@@ -50,9 +50,12 @@ class UsersProducer(Producer):
         return self
 
 
-class UsersRpcService(RpcService):
+class UsersRpcService:
+    def __init__(self, rpc_client_factory: RpcClientFactory) -> None:
+        self._client = rpc_client_factory
+
     def get_account_credentials(self, account_id: int) -> AccountCredentials:
-        with self._client.connect() as connection:
+        with self._client().connect() as connection:
             response = connection.call(
                 PublisherMessage(
                     routing_key="user.request.credentials",
