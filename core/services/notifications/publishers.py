@@ -65,7 +65,7 @@ class AsynchronousPublisher:
             self._create_connection()
             self._connection.ioloop.start()
         except Exception:
-            logger.exception("Connection failed")
+            logger.exception("RabbitMQ connection failed")
             self._close_connection()
             if self._connection and not self._connection.is_closed:
                 self._connection.ioloop.start()
@@ -95,7 +95,7 @@ class AsynchronousPublisher:
         connection: pika.BaseConnection,
         exc: BaseException,
     ) -> None:
-        logger.error("Failed to open connection: %s", exc)
+        logger.error("Failed to open RabbitMQ connection: %s", exc)
         connection.ioloop.stop()
 
     def _on_connection_closed(
