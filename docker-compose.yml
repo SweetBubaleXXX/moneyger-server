@@ -24,6 +24,10 @@ services:
   celery_worker:
     extends:
       service: django
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
     command: celery -A moneymanager worker --autoscale 2,1 --loglevel INFO --events
 
   db:

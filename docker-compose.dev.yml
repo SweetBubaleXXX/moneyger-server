@@ -8,6 +8,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
     volumes:
       - ./:/app:ro
     restart: "no"
@@ -20,6 +24,10 @@ services:
     extends:
       file: docker-compose.yml
       service: celery_worker
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
     environment:
       DEBUG: True
     command: celery -A moneymanager worker --loglevel INFO --autoscale 2,1
