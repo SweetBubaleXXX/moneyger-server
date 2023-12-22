@@ -9,9 +9,7 @@ services:
     depends_on:
       - db
       - redis
-    networks:
-      - default
-      - moneyger_rabbitmq
+      - rabbitmq
     env_file: .env
     environment:
       DATABASE_URL: postgres://django:${POSTGRES_PASSWORD}@db:5432/django
@@ -57,7 +55,8 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - moneyger_rabbitmq
+      - default
+      - notifications_service_network
     expose:
       - 5672
       - 15672
@@ -67,6 +66,6 @@ volumes:
   rabbitmq_data:
 
 networks:
-  moneyger_rabbitmq:
-    name: ${RABBITMQ_NETWORK:-moneyger-rabbitmq}
-    external: ${RABBITMQ_NETWORK_EXTERNAL:-false}
+  notifications_service_network:
+    name: ${NOTIFICATIONS_SERVICE_NETWORK:-moneyger-notifications}
+    external: ${NOTIFICATIONS_SERVICE_NETWORK_EXTERNAL:-false}
