@@ -59,4 +59,5 @@ volumes:
 
 networks:
   moneyger_rabbitmq:
-    name: moneyger-rabbitmq
+    name: ${RABBITMQ_NETWORK:-moneyger-rabbitmq}
+    external: ${RABBITMQ_NETWORK_EXTERNAL:-false}
