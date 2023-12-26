@@ -1,9 +1,9 @@
 import functools
 import inspect
 from collections.abc import Callable
-from types import GenericAlias
 from importlib import import_module
 from threading import Lock
+from types import GenericAlias
 from typing import ParamSpec, TypeVar
 
 _Bindings = dict[type, object]
