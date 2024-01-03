@@ -1,7 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
 
-from ...constants import TransactionType
+from core.constants import TransactionType
+
 from ..models import TransactionCategory
 from .base import BaseViewTestCase
 from .factories import AccountFactory
@@ -173,6 +174,17 @@ class TransactionCategoryViewTests(BaseViewTestCase):
         for category in subcategories:
             with self.assertRaises(TransactionCategory.DoesNotExist):
                 TransactionCategory.objects.get(pk=category.id)
+
+    def test_deleted_transactions_notification(self):
+        """Deleted transactions must be sent to notifications service."""
+        category = self.create_category()
+        self.create_transactions_batch(5, category=category)
+        response = self.client.delete(
+            reverse("transaction-category-detail", args=(category.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.publisher_mock.add_message.assert_called()
+        self.publisher_mock.publish.assert_called_once()
 
 
 class TransactionCategoryFilterTests(BaseViewTestCase):

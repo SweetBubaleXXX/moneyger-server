@@ -1,4 +1,5 @@
 import csv
+from collections import deque
 from collections.abc import Iterable
 from dataclasses import asdict
 from typing import Generator
@@ -8,6 +9,7 @@ from django.utils import timezone
 from rest_framework.response import Response
 
 from ..transactions.models import Transaction
+from ..transactions.services import notify_transaction_changes
 from .serializers import CategoryJsonSerializer, TransacationCsvSerializer
 from .utils import CategoryImportContext, EchoBuffer
 
@@ -50,9 +52,10 @@ def json_response(result: list) -> Response:
     )
 
 
-def add_categories_to_account(categories: list, context: CategoryImportContext):
-    if not categories:
-        return
+def _import_categories(
+    categories_import_stack: deque[tuple[list, CategoryImportContext]]
+) -> None:
+    categories, context = categories_import_stack.pop()
     serializer = CategoryJsonSerializer(
         data=categories,
         context=asdict(context),
@@ -60,11 +63,20 @@ def add_categories_to_account(categories: list, context: CategoryImportContext):
     )
     serializer.is_valid(raise_exception=True)
     created_categories = serializer.save()
-    for category_data, category_instance in zip(categories, created_categories):
-        add_categories_to_account(
-            category_data["subcategories"],
-            CategoryImportContext(
-                account=context.account,
-                parent_category=category_instance,
-            ),
+    for category_data, instance in zip(categories, created_categories):
+        categories_import_stack.append(
+            (
+                category_data["subcategories"],
+                CategoryImportContext(
+                    account=context.account,
+                    parent_category=instance,
+                ),
+            )
         )
+
+
+def add_categories_to_account(categories: list, context: CategoryImportContext) -> None:
+    categories_import_stack = deque([(categories, context)])
+    while categories_import_stack:
+        _import_categories(categories_import_stack)
+    notify_transaction_changes()

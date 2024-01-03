@@ -3,8 +3,9 @@ from copy import deepcopy
 from django.urls import reverse
 from rest_framework import status
 
-from ...transactions.models import Transaction, TransactionCategory
-from ...transactions.tests.base import BaseViewTestCase
+from core.transactions.models import Transaction, TransactionCategory
+from core.transactions.tests.base import BaseViewTestCase
+
 from .constants import EXPORTED_CATEGORIES
 
 
@@ -54,6 +55,13 @@ class ImportJsonViewTests(BaseViewTestCase):
             parent_category__isnull=False
         ).count()
         self.assertEqual(subcategories_count, 6)
+
+    def test_transactions_added_notification(self):
+        """Imported transactions must be sent to notifications service."""
+        response = self.client.post(reverse("import-json"), EXPORTED_CATEGORIES)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.publisher_mock.add_message.assert_called_once()
+        self.publisher_mock.publish.assert_called_once()
 
     def test_queries_number(self):
         """Correct number of queries must be performed."""

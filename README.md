@@ -9,6 +9,7 @@ You can create `.env` file in project root directory.
 - [`DATABASE_URL`](https://django-environ.readthedocs.io/en/latest/types.html#environ-env-db-url)
 - [`CELERY_BROKER_URL`](https://docs.celeryq.dev/en/stable/userguide/configuration.html#broker-url)
 - [`CELERY_RESULT_BACKEND`](https://docs.celeryq.dev/en/stable/userguide/configuration.html#result-backend)
+- [`RABBITMQ_URL`](https://pika.readthedocs.io/en/stable/examples/using_urlparameters.html)
 
 #### Optional variables:
 
@@ -33,6 +34,8 @@ These variables must be present in your `.env` file:
 - `SECRET_KEY`
 - `POSTGRES_PASSWORD`
 - `REDIS_PASSWORD`
+- `RABBITMQ_USER`
+- `RABBITMQ_PASSWORD`
 
 ### Development
 

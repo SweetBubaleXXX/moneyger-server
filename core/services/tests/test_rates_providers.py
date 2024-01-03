@@ -5,9 +5,9 @@ from django.conf import settings
 from django.test import TestCase
 from rest_framework import status
 
+from core.constants import CurrencyCode
 from core.tests import CacheClearMixin, StopPatchersMixin
 
-from ...constants import CurrencyCode
 from ..rates_providers import AlfaBankNationalRates, FetchRatesException
 from . import constants
 

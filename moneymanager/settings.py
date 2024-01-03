@@ -202,6 +202,8 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
+RABBITMQ_URL = env("RABBITMQ_URL", default=None)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -256,7 +258,7 @@ SIMPLE_JWT = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Moneyger API",
-    "VERSION": "1.0.0",
+    "VERSION": "1.2.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
@@ -283,6 +285,8 @@ ALFA_BANK_NATIONAL_RATES_URL = env(
     "ALFA_BANK_NATIONAL_RATES_URL",
     default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",
 )
+
+NOTIFICATIONS_SERVICE_TOKEN_LENGTH = 32
 
 DEFAULT_CHAT_GROUP = "public_chat"
 

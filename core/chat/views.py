@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ..services.messages import MessageCache
 from .serializers import MessageSerializer
-from .services import MessageCache
 
 
 class MessagesView(APIView):

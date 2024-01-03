@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from djoser.views import UserViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -9,6 +10,10 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .services import (
+    create_notifications_service_token,
+    unsubscribe_user_from_notifications,
+)
 from .utils import set_refresh_token_cookie
 
 
@@ -49,3 +54,17 @@ class JwtLogoutView(APIView):
         response = Response()
         response.delete_cookie(settings.JWT_REFRESH_TOKEN_COOKIE)
         return response
+
+
+class CustomUserViewSet(UserViewSet):
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
+        unsubscribe_user_from_notifications(instance)
+
+
+class NotificationsServiceAuthView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs) -> Response:
+        access_token = create_notifications_service_token(request.user.id)
+        return Response({"access_token": access_token})

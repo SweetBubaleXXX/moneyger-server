@@ -1,13 +1,12 @@
 from django.urls import reverse
 from rest_framework import status
 
+from core.constants import TransactionType
 from core.tests import MockCurrencyConvertorMixin
 from core.transactions.tests.base import (
     BaseSummaryViewTestCase,
     IncomeOutcomeCategoriesMixin,
 )
-
-from ...constants import TransactionType
 
 
 class TransactionCategorySummaryViewTests(

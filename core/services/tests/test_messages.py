@@ -3,9 +3,9 @@ from collections import deque
 from django.conf import settings
 from django.test import TestCase
 
+from core.services.messages import MessageCache
 from core.tests import CacheClearMixin
 
-from ..services import MessageCache
 from .factories import MessageFactory
 
 

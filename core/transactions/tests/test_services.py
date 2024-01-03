@@ -1,8 +1,8 @@
 from decimal import Decimal
 
+from core.constants import CurrencyCode
 from core.tests import MockCurrencyConvertorMixin
 
-from ...constants import CurrencyCode
 from ..services import compute_total
 from ..utils import get_all_subcategories, get_all_transactions
 from .base import BaseTestCase, IncomeOutcomeCategoriesMixin

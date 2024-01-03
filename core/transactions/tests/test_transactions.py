@@ -4,7 +4,8 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from ...constants import CurrencyCode, TransactionType
+from core.constants import CurrencyCode, TransactionType
+
 from ..models import Transaction
 from .base import BaseViewTestCase, IncomeOutcomeCategoriesMixin
 from .factories import AccountFactory
@@ -117,6 +118,17 @@ class TransactionDetailsViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertLessEqual(request_body.items(), response.json().items())
 
+    def test_updated_transaction_notification(self):
+        """Updated transaction must be sent to notifications service."""
+        transaction = self.create_transaction()
+        response = self.client.patch(
+            reverse("transaction-detail", args=(transaction.id,)),
+            {"amount": "444.4"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.publisher_mock.add_message.assert_called()
+        self.publisher_mock.publish.assert_called_once()
+
     def test_delete_transaction(self):
         """Transaction must be successfully deleted."""
         transaction = self.create_transaction()
@@ -126,6 +138,16 @@ class TransactionDetailsViewTests(BaseViewTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         with self.assertRaises(Transaction.DoesNotExist):
             Transaction.objects.get(pk=transaction.id)
+
+    def test_deleted_transaction_notification(self):
+        """Deleted transaction id must be sent to notifications service."""
+        transaction = self.create_transaction()
+        response = self.client.delete(
+            reverse("transaction-detail", args=(transaction.id,))
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.publisher_mock.add_message.assert_called()
+        self.publisher_mock.publish.assert_called_once()
 
 
 class CategorizedTransactionViewTests(IncomeOutcomeCategoriesMixin, BaseViewTestCase):
@@ -281,6 +303,21 @@ class CategorizedTransactionViewTests(IncomeOutcomeCategoriesMixin, BaseViewTest
             expected_response_subdict.items(),
             response.json().items(),
         )
+
+    def test_added_transaction_notification(self):
+        """New transaction must be sent to notifications service."""
+        response = self.client.post(
+            reverse(
+                "transaction-category-transactions", args=(self.income_category.id,)
+            ),
+            {
+                "amount": "43.21",
+                "currency": CurrencyCode.RUB,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.publisher_mock.add_message.assert_called_once()
+        self.publisher_mock.publish.assert_called_once()
 
     def test_add_transaction_queries_number(self):
         """Correct number of queries must be performed."""

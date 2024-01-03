@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 from django.test import TestCase
 from iso4217 import Currency
 
-from ...constants import CurrencyCode
+from core.constants import CurrencyCode
+
 from ..currency import CurrencyConverter
 from ..rates_providers import BaseRates
 
