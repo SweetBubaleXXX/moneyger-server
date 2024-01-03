@@ -1,7 +1,7 @@
-from decimal import Decimal
 import json
 import threading
 from collections import defaultdict
+from decimal import Decimal
 from operator import itemgetter
 from typing import TYPE_CHECKING, Collection, Iterable, Literal, Self, TypedDict
 
