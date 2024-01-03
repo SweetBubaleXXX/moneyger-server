@@ -3,8 +3,8 @@ from django.urls import reverse
 
 from core.transactions.tests.base import BaseViewTestCase
 
-from ..services import MessageCache
-from .factories import MessageFactory
+from ...services.messages import MessageCache
+from ...services.tests.factories import MessageFactory
 
 
 class MessagesViewTests(BaseViewTestCase):

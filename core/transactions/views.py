@@ -12,6 +12,7 @@ from .serializers import (
     TransactionSerializer,
     TransactionUpdateSerializer,
 )
+from .services import notify_transaction_changes
 
 
 class BaseViewMixin:
@@ -41,6 +42,10 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(account=self.request.user)
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
+        notify_transaction_changes()
 
     def paginate_queryset(self, queryset):
         if "all" in self.request.query_params:
@@ -98,6 +103,7 @@ class TransactionCategoryViewSet(BaseViewMixin, viewsets.ModelViewSet):
             account=request.user,
             category=self.get_object(),
         )
+        notify_transaction_changes()
         return Response(serializer.data)
 
     @action(
@@ -139,6 +145,14 @@ class TransactionDetailView(
     TransactionViewMixin, generics.RetrieveUpdateDestroyAPIView
 ):
     serializer_class = TransactionUpdateSerializer
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        notify_transaction_changes()
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)
+        notify_transaction_changes()
 
 
 class TransactionSummaryView(TransactionViewMixin, generics.GenericAPIView):

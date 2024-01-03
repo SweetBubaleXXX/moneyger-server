@@ -4,6 +4,7 @@ from decimal import Decimal
 from rest_framework import status
 from rest_framework.response import Response
 
+from core.services.notifications.transactions import TransactionsProducer
 from moneymanager import services_container
 
 from ..constants import CurrencyCode, TransactionType
@@ -73,3 +74,8 @@ def compute_total(
         else:
             total += amount
     return total
+
+
+@services_container.inject("transactions_producer")
+def notify_transaction_changes(transactions_producer: TransactionsProducer) -> None:
+    transactions_producer.send()

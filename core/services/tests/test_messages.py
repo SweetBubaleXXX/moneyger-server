@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from core.tests import CacheClearMixin
 
-from ..services import MessageCache
+from ...services.messages import MessageCache
 from .factories import MessageFactory
 
 

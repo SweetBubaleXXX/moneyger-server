@@ -202,6 +202,8 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
+RABBITMQ_URL = env("RABBITMQ_URL", default=None)
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -283,6 +285,8 @@ ALFA_BANK_NATIONAL_RATES_URL = env(
     "ALFA_BANK_NATIONAL_RATES_URL",
     default="https://developerhub.alfabank.by:8273/partner/1.0.1/public/nationalRates",
 )
+
+NOTIFICATIONS_SERVICE_TOKEN_LENGTH = 32
 
 DEFAULT_CHAT_GROUP = "public_chat"
 

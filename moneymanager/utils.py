@@ -3,6 +3,7 @@ import inspect
 from collections.abc import Callable
 from importlib import import_module
 from threading import Lock
+from types import GenericAlias
 from typing import ParamSpec, TypeVar
 
 _Bindings = dict[type, object]
@@ -18,7 +19,7 @@ class InjectionContainer:
 
     def __getitem__(self, key: type[_T]) -> _T:
         if not inspect.isclass(key):
-            raise TypeError(f"{key} isn't a valid type")
+            raise TypeError(f"{key} is not a valid type")
         with self._lock:
             if key not in self._bindings:
                 raise KeyError(f"No binding found for type {key}")
@@ -54,9 +55,8 @@ class InjectionContainer:
                 for param_name in params:
                     call_args = inspect.signature(func).bind_partial(*args, **kwargs)
                     if param_name not in call_args.arguments:
-                        call_args.arguments[param_name] = self.__getitem__(
-                            annotations[param_name]
-                        )
+                        key = self._extract_type(annotations[param_name])
+                        call_args.arguments[param_name] = self.__getitem__(key)
                 return func(*call_args.args, **call_args.kwargs)
 
             return wrapper
@@ -73,7 +73,21 @@ class InjectionContainer:
         self.__setitem__(key, factory(*args, **kwargs))
 
     def _validate_binding(self, key, value):
+        if key is type:
+            raise TypeError(f"Binding for {type} is ambiguous")
         if not (inspect.isclass(key) and isinstance(value, key)):
             raise TypeError(
                 f"Can't assign instance of type {type(value)} to type {key}"
             )
+
+    def _extract_type(self, key: type | GenericAlias) -> type:
+        if not isinstance(key, GenericAlias):
+            return key
+        if key.__origin__ is not type:
+            raise TypeError(f"Generic alias of {key.__origin__} is not supported")
+        return self._parse_generic_type_alias(key)
+
+    def _parse_generic_type_alias(self, type_alias: GenericAlias) -> type:
+        if len(type_alias.__args__) != 1:
+            raise TypeError("Generic type alias with several arguments is ambiguous")
+        return type(type_alias.__args__[0])

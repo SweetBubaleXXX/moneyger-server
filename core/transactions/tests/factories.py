@@ -26,7 +26,7 @@ class TransactionFactory(factory.django.DjangoModelFactory):
         model = Transaction
 
     category = factory.SubFactory(TransactionCategoryFactory)
-    amount = factory.Faker("pyint")
+    amount = factory.Faker("pyint", min_value=1)
     currency = factory.Iterator(CurrencyCode)
     comment = factory.Faker("text", max_nb_chars=30)
     transaction_time = factory.Faker(
