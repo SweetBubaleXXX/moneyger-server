@@ -1,10 +1,11 @@
+from decimal import Decimal
 import json
 import threading
 from collections import defaultdict
 from operator import itemgetter
 from typing import TYPE_CHECKING, Collection, Iterable, Literal, Self, TypedDict
 
-from core.constants import CurrencyCode
+from core.constants import CurrencyCode, TransactionType
 from core.services.notifications.publishers import Publisher
 from moneymanager import services_container
 
@@ -38,9 +39,15 @@ def _serialize_transaction(
         transaction_id=transaction.id,
         account_id=transaction.account.id,
         transaction_type=transaction.category.transaction_type,
-        amount=str(usd_amount),
+        amount=_serialize_amount(usd_amount, transaction.category.transaction_type),
         transaction_time=transaction.transaction_time.isoformat(),
     )
+
+
+def _serialize_amount(amount: Decimal | int, transaction_type: TransactionType) -> str:
+    if transaction_type is TransactionType.OUTCOME:
+        return str(-amount)
+    return str(amount)
 
 
 class TransactionsProducer(Producer):
