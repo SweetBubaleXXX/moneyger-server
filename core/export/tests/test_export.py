@@ -6,11 +6,11 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
+from core.constants import CurrencyCode, TransactionType
 from core.tests import StopPatchersMixin
+from core.transactions.tests.base import BaseTestCase, BaseViewTestCase
+from core.transactions.tests.factories import AccountFactory
 
-from ...constants import CurrencyCode, TransactionType
-from ...transactions.tests.base import BaseTestCase, BaseViewTestCase
-from ...transactions.tests.factories import AccountFactory
 from ..tasks import generate_json
 
 

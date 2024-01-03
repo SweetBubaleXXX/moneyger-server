@@ -4,7 +4,8 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 
-from ...constants import CurrencyCode, TransactionType
+from core.constants import CurrencyCode, TransactionType
+
 from ..models import Transaction
 from .base import BaseViewTestCase, IncomeOutcomeCategoriesMixin
 from .factories import AccountFactory

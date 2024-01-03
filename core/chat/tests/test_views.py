@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.urls import reverse
 
+from core.services.messages import MessageCache
+from core.services.tests.factories import MessageFactory
 from core.transactions.tests.base import BaseViewTestCase
-
-from ...services.messages import MessageCache
-from ...services.tests.factories import MessageFactory
 
 
 class MessagesViewTests(BaseViewTestCase):

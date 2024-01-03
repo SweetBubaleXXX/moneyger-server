@@ -3,8 +3,9 @@ from copy import deepcopy
 from django.urls import reverse
 from rest_framework import status
 
-from ...transactions.models import Transaction, TransactionCategory
-from ...transactions.tests.base import BaseViewTestCase
+from core.transactions.models import Transaction, TransactionCategory
+from core.transactions.tests.base import BaseViewTestCase
+
 from .constants import EXPORTED_CATEGORIES
 
 

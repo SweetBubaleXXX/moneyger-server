@@ -2,8 +2,8 @@ import factory
 from django.utils import timezone
 
 from accounts.tests.factories import AccountFactory
+from core.constants import CurrencyCode, TransactionType
 
-from ...constants import CurrencyCode, TransactionType
 from ..models import Transaction, TransactionCategory
 
 

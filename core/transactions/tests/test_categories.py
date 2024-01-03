@@ -1,7 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
 
-from ...constants import TransactionType
+from core.constants import TransactionType
+
 from ..models import TransactionCategory
 from .base import BaseViewTestCase
 from .factories import AccountFactory

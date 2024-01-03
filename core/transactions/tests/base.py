@@ -7,9 +7,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 
+from core.constants import TransactionType
 from core.tests import CacheClearMixin, MockPublishersMixin
 
-from ...constants import TransactionType
 from .factories import AccountFactory, TransactionCategoryFactory, TransactionFactory
 
 

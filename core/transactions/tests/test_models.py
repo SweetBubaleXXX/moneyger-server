@@ -3,8 +3,8 @@ from decimal import Decimal
 from django.forms import ValidationError
 
 from accounts.tests.factories import AccountFactory
+from core.constants import CurrencyCode
 
-from ...constants import CurrencyCode
 from ..models import Transaction
 from .base import BaseTestCase
 
